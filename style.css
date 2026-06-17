@@ -647,3 +647,10 @@
   font-size: 13px;
   color: #777;
 }
+
+.section-count {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  margin-left: 4px;
+}

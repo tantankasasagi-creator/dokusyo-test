@@ -547,6 +547,7 @@ function isImageUrl(url) {
     lower.includes('.jpeg') ||
     lower.includes('.png') ||
     lower.includes('.webp') ||
+    lower.includes('ndlsearch.ndl.go.jp/thumbnail') ||
     lower.includes('m.media-amazon.com/images') ||
     lower.includes('msp.c.yimg.jp/images')
   );

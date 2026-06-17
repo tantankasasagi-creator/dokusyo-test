@@ -168,15 +168,6 @@ async function scanLoop(detector){
 
     const book = data[0];
 
-if(!book){
-
-  document.getElementById('status')
-    .textContent =
-    'openBDにデータがありません';
-
-  return;
-}
-
 const cover =
   book.summary?.cover || '';
 

@@ -68,6 +68,10 @@ ISBN未取得
 本一覧取得テスト
 </button>
 
+  <button onclick="saveApiTest()">
+API保存テスト
+</button>
+  
 <div id="gasResult">
 GAS未確認
 </div>
@@ -301,6 +305,38 @@ resultBox.innerHTML =
 
     resultBox.textContent =
       '取得失敗\n' + error.message;
+  }
+}
+
+  async function saveApiTest(){
+
+  const resultBox =
+    document.getElementById('gasResult');
+
+  resultBox.textContent =
+    '保存中...';
+
+  try{
+
+    const response =
+      await fetch(GAS_WEB_APP_URL, {
+        method:'POST',
+        body:JSON.stringify({
+          type:'saveApiTest',
+          message:'Cloudflareから保存成功'
+        })
+      });
+
+    const data =
+      await response.json();
+
+    resultBox.textContent =
+      JSON.stringify(data, null, 2);
+
+  }catch(error){
+
+    resultBox.textContent =
+      '保存失敗\n' + error.message;
   }
 }
 </script>

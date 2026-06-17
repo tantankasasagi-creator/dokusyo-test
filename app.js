@@ -14,30 +14,49 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function loadInitialData() {
+
   document.getElementById('app').innerHTML =
     '<p class="empty-message">読み込み中...</p>';
 
   try {
-    const response = await fetch(GAS_WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({
-        type: 'getBooks'
-      })
-    });
 
-    const data = await response.json();
+    const response =
+      await fetch(GAS_WEB_APP_URL, {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'getInitialData'
+        })
+      });
 
-    state.books = data.books || [];
-    state.readings = [];
-    state.quotes = [];
-    state.links = [];
-    state.genres = [];
+    const data =
+      await response.json();
+
+    state.books =
+      data.books || [];
+
+    state.readings =
+      data.readings || [];
+
+    state.quotes =
+      data.quotes || [];
+
+    state.links =
+      data.links || [];
+
+    state.genres =
+      data.genres || [];
 
     showHomeView();
 
   } catch (error) {
+
     document.getElementById('app').innerHTML =
-      `<p class="empty-message">読み込みに失敗しました<br>${escapeHtml(error.message)}</p>`;
+      `
+      <p class="empty-message">
+        読み込みに失敗しました<br>
+        ${escapeHtml(error.message)}
+      </p>
+      `;
   }
 }
 

@@ -92,14 +92,14 @@ function showHomeView() {
     </section>
 
     <section class="section">
-      <h2 class="section-title">📖 机の上</h2>
+      <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">📖 机の上</h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(readingBooks, '読書中の本', false)}
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">📦 積読</h2>
+      <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">📦 積読</h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(tsundokuBooks, '積読', false)}
       </div>
@@ -107,14 +107,14 @@ function showHomeView() {
 
     <section class="section home-split-section">
       <div>
-        <h2 class="section-title">💭 気になる本</h2>
+        <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">💭 気になる本</h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(wantBooks, '気になる本', false)}
         </div>
       </div>
 
       <div>
-        <h2 class="section-title">⏸ 中断</h2>
+        <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">⏸ 中断</h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(pausedBooks, '中断本', false)}
         </div>
@@ -1822,6 +1822,36 @@ function applyGenreModal() {
   document.getElementById('genreDisplayText').textContent = displayText;
   document.getElementById('genreModal')?.classList.add('hidden');
 }
+
+function showStatusBookList(status, title) {
+  setChromeVisible(true);
+  state.currentView = 'home';
+  setActiveNav('home');
+
+  const books = getBooksByStatus(status);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="showHomeView()">←</button>
+      <div></div>
+    </div>
+
+    <h1 class="page-title">${escapeHtml(title)}</h1>
+
+    <div class="subtle" style="margin-bottom:12px;">
+      ${books.length}冊
+    </div>
+
+    <div class="book-grid">
+      ${
+        books.length
+          ? books.map(book => renderBookCard(book)).join('')
+          : '<div class="empty-message">該当する本はありません。</div>'
+      }
+    </div>
+  `;
+}
+
 
 
 

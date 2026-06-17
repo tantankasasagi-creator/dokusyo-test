@@ -3,95 +3,144 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>dokusyo camera test</title>
+<title>ISBNテスト</title>
+
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    padding: 20px;
-    background: #f7f3ea;
-    color: #222;
-  }
-  h1 {
-    font-size: 22px;
-  }
-  button {
-    width: 100%;
-    padding: 16px;
-    font-size: 18px;
-    border: none;
-    border-radius: 14px;
-    background: #222;
-    color: white;
-    margin: 12px 0;
-  }
-  video {
-    width: 100%;
-    max-height: 60vh;
-    background: #000;
-    border-radius: 16px;
-    margin-top: 12px;
-  }
-  #status {
-    white-space: pre-wrap;
-    background: white;
-    padding: 12px;
-    border-radius: 12px;
-    margin-top: 12px;
-  }
+body{
+  font-family:sans-serif;
+  padding:20px;
+  background:#f5f1e8;
+}
+
+button{
+  width:100%;
+  padding:16px;
+  margin-bottom:12px;
+  font-size:18px;
+  border:none;
+  border-radius:14px;
+  background:#222;
+  color:white;
+}
+
+video{
+  width:100%;
+  border-radius:12px;
+  background:#000;
+}
+
+#isbn{
+  margin-top:16px;
+  padding:16px;
+  background:white;
+  border-radius:12px;
+  font-size:22px;
+  font-weight:bold;
+}
+
+#status{
+  margin-top:12px;
+}
 </style>
 </head>
+
 <body>
 
-<h1>dokusyo カメラ起動テスト</h1>
+<h1>ISBNバーコード実験</h1>
 
-<button onclick="startCamera()">📷 カメラを起動</button>
-<button onclick="stopCamera()">停止</button>
+<button onclick="startScanner()">
+📚 ISBNを読む
+</button>
 
 <video id="video" autoplay playsinline></video>
 
-<div id="status">待機中</div>
+<div id="isbn">
+ISBN未取得
+</div>
+
+<div id="status">
+待機中
+</div>
 
 <script>
-let stream = null;
 
-async function startCamera() {
+let stream;
+
+async function startScanner(){
+
   const status = document.getElementById('status');
   const video = document.getElementById('video');
 
-  try {
-    status.textContent = 'カメラ起動中...';
+  if(!('BarcodeDetector' in window)){
+    status.textContent =
+      'このブラウザは BarcodeDetector 非対応です';
+    return;
+  }
 
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' }
-      },
-      audio: false
-    });
+  try{
+
+    const detector =
+      new BarcodeDetector({
+        formats:['ean_13']
+      });
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+        video:{
+          facingMode:'environment'
+        }
+      });
 
     video.srcObject = stream;
-    status.textContent = 'カメラ起動成功！本の裏表紙を映す実験に進めそうです。';
 
-  } catch (error) {
     status.textContent =
-      'カメラ起動失敗\n\n' +
-      error.name + '\n' +
-      error.message + '\n\n' +
-      'ブラウザのカメラ許可を確認してください。';
+      'ISBNバーコードを映してください';
+
+    scanLoop(detector);
+
+  }catch(err){
+
+    status.textContent =
+      'エラー: ' + err.message;
+
   }
 }
 
-function stopCamera() {
-  const status = document.getElementById('status');
+async function scanLoop(detector){
+
   const video = document.getElementById('video');
 
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-    stream = null;
-  }
+  try{
 
-  video.srcObject = null;
-  status.textContent = '停止しました';
+    const barcodes =
+      await detector.detect(video);
+
+    if(barcodes.length){
+
+      const code =
+        barcodes[0].rawValue;
+
+      document.getElementById('isbn')
+        .textContent = code;
+
+      document.getElementById('status')
+        .textContent = '取得成功！';
+
+      if(stream){
+        stream.getTracks()
+          .forEach(track => track.stop());
+      }
+
+      return;
+    }
+
+  }catch(e){}
+
+  requestAnimationFrame(
+    () => scanLoop(detector)
+  );
 }
+
 </script>
 
 </body>

@@ -427,8 +427,8 @@ function showBookDetail(bookId) {
     <div class="detail-header">
       <button class="icon-button" onclick="goBackToMainView()">←</button>
       <div>
-        <button class="icon-button" onclick="alert('編集は次フェーズで移植します')">✏️</button>
-        ${isArchived ? `<button class="icon-button" onclick="alert('再読は次フェーズで移植します')">📖</button>` : ''}
+        <button class="icon-button" onclick="showEditView('${bookId}')">✏️</button>
+        ${isArchived ? `<button class="icon-button" onclick="startRereading('${bookId}')">📖</button>` : ''}
       </div>
     </div>
 
@@ -1188,5 +1188,285 @@ function escapeHtml(value) {
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
+
+function startRereading(bookId) {
+  showEditView(bookId, '__REREAD_DRAFT__');
+}
+
+function showEditView(bookId, readingId = '') {
+  const book = state.books.find(b => b['書籍ID'] === bookId);
+  if (!book) return;
+
+  const isRereadDraft = readingId === '__REREAD_DRAFT__';
+
+  const latestReading = isRereadDraft
+    ? {
+        '読始日': new Date().toISOString().slice(0, 10),
+        '読了日': '',
+        '評価': '',
+        '感想': '',
+        '読了場所': ''
+      }
+    : readingId
+      ? state.readings.find(r => r['読書体験ID'] === readingId) || {}
+      : getLatestReading(bookId) || {};
+
+  setChromeVisible(false);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="saveAndCloseEdit('${bookId}', '${readingId}')">←</button>
+      <button class="icon-button" onclick="closeEditWithoutSave('${bookId}')">×</button>
+    </div>
+
+    <h1 class="page-title">本と付き合う</h1>
+
+    <div class="edit-form">
+      ${renderEditField('タイトル', 'editTitle', book['タイトル'])}
+      ${renderEditField('著者', 'editAuthor', book['著者'])}
+      ${renderEditField('出版社', 'editPublisher', book['出版社'])}
+      ${renderEditField('ジャンル', 'editGenre', book['ジャンル'])}
+      ${renderEditField('タグ', 'editTags', book['タグ'])}
+
+      <div class="edit-divider"></div>
+
+      <div class="edit-row">
+        <div>
+          ${renderEditField('購入日', 'editPurchaseDate', formatDateForInput(book['購入日']), 'date')}
+        </div>
+        <div>
+          ${renderEditField('購入場所', 'editPurchasePlace', book['購入場所'])}
+        </div>
+      </div>
+
+      <div class="edit-divider"></div>
+
+      <div class="edit-row">
+        <div>
+          ${renderEditField('読始日', 'editStartDate', formatDateForInput(latestReading['読始日']), 'date')}
+        </div>
+        <div>
+          ${renderEditField('読了日', 'editFinishDate', formatDateForInput(latestReading['読了日']), 'date')}
+        </div>
+      </div>
+
+      ${renderEditField('読了場所', 'editFinishPlace', latestReading['読了場所'])}
+      ${renderRatingField(latestReading['評価'])}
+
+      <label class="edit-label" for="editImpression">感想</label>
+      <textarea id="editImpression" class="edit-textarea" rows="6">${escapeHtml(latestReading['感想'] || '')}</textarea>
+
+      <div class="edit-divider"></div>
+
+      <section class="edit-sub-section">
+        <div class="edit-sub-title">引用</div>
+        <button class="mini-button" onclick="alert('引用追加は次フェーズ')">＋追加</button>
+      </section>
+
+      <section class="edit-sub-section">
+        <div class="edit-sub-title">この本から生まれた本</div>
+        <button class="mini-button" onclick="alert('本リンク追加は次フェーズ')">＋追加</button>
+      </section>
+    </div>
+  `;
+}
+
+function renderEditField(label, id, value, type = 'text') {
+  return `
+    <label class="edit-label" for="${id}">${label}</label>
+    <input
+      id="${id}"
+      class="edit-input"
+      type="${type}"
+      value="${escapeHtml(value || '')}"
+    >
+  `;
+}
+
+function renderRatingField(value) {
+  const rating = Number(value || 0);
+
+  return `
+    <label class="edit-label">評価</label>
+    <div class="rating-stars" id="ratingStars">
+      ${[1, 2, 3, 4, 5].map(n => `
+        <button
+          type="button"
+          class="rating-star ${n <= rating ? 'selected' : ''}"
+          onclick="setRating(${n})"
+        >★</button>
+      `).join('')}
+    </div>
+    <input id="editRating" type="hidden" value="${rating || ''}">
+  `;
+}
+
+function setRating(value) {
+  document.getElementById('editRating').value = value;
+
+  document.querySelectorAll('.rating-star').forEach((star, index) => {
+    star.classList.toggle('selected', index < value);
+  });
+}
+
+function formatDateForInput(value) {
+  if (!value) return '';
+
+  const date = parseDate(value);
+  if (!date) return '';
+
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+
+  return `${y}-${m}-${d}`;
+}
+
+async function saveAndCloseEdit(bookId, readingId = '') {
+  if (readingId === '__REREAD_DRAFT__') {
+    await saveRereadDraftAndClose(bookId);
+    return;
+  }
+
+  try {
+    const result = await saveBookData(bookId);
+    updateLocalStateAfterSave(bookId, result);
+    showBookDetail(bookId);
+  } catch (error) {
+    alert(`保存に失敗しました: ${error.message}`);
+  }
+}
+
+async function saveBookData(bookId) {
+  const bookPayload = {
+    title: document.getElementById('editTitle')?.value || '',
+    author: document.getElementById('editAuthor')?.value || '',
+    publisher: document.getElementById('editPublisher')?.value || '',
+    genre: document.getElementById('editGenre')?.value || '',
+    tags: document.getElementById('editTags')?.value || '',
+    purchaseDate: document.getElementById('editPurchaseDate')?.value || '',
+    purchasePlace: document.getElementById('editPurchasePlace')?.value || ''
+  };
+
+  const readingPayload = {
+    startDate: document.getElementById('editStartDate')?.value || '',
+    finishDate: document.getElementById('editFinishDate')?.value || '',
+    finishPlace: document.getElementById('editFinishPlace')?.value || '',
+    rating: document.getElementById('editRating')?.value || '',
+    impression: document.getElementById('editImpression')?.value || ''
+  };
+
+  const bookResponse = await fetch(GAS_WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      type: 'updateBook',
+      bookId,
+      bookData: bookPayload
+    })
+  });
+
+  await bookResponse.json();
+
+  const readingResponse = await fetch(GAS_WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({
+      type: 'updateLatestReading',
+      bookId,
+      readingData: readingPayload
+    })
+  });
+
+  const readingData = await readingResponse.json();
+
+  return {
+    bookPayload,
+    readingPayload,
+    readingId: readingData.result.readingId,
+    skipped: readingData.result.skipped
+  };
+}
+
+function updateLocalStateAfterSave(bookId, result) {
+  const today = new Date().toISOString().slice(0, 10);
+
+  const book = state.books.find(b => b['書籍ID'] === bookId);
+  if (book) {
+    book['タイトル'] = result.bookPayload.title;
+    book['著者'] = result.bookPayload.author;
+    book['出版社'] = result.bookPayload.publisher;
+    book['ジャンル'] = result.bookPayload.genre;
+    book['タグ'] = result.bookPayload.tags;
+    book['購入日'] = result.bookPayload.purchaseDate;
+    book['購入場所'] = result.bookPayload.purchasePlace;
+    book['更新日時'] = today;
+  }
+
+  if (result.skipped) return;
+
+  let reading = state.readings.find(r => r['読書体験ID'] === result.readingId);
+
+  if (!reading) {
+    reading = {
+      '読書体験ID': result.readingId,
+      '書籍ID': bookId,
+      '作成日時': today
+    };
+    state.readings.push(reading);
+  }
+
+  reading['読始日'] = result.readingPayload.startDate;
+  reading['読了日'] = result.readingPayload.finishDate;
+  reading['評価'] = result.readingPayload.rating;
+  reading['感想'] = result.readingPayload.impression;
+  reading['読了場所'] = result.readingPayload.finishPlace;
+  reading['更新日時'] = today;
+}
+
+async function saveRereadDraftAndClose(bookId) {
+  const readingPayload = {
+    startDate: document.getElementById('editStartDate')?.value || '',
+    finishDate: document.getElementById('editFinishDate')?.value || '',
+    finishPlace: document.getElementById('editFinishPlace')?.value || '',
+    rating: document.getElementById('editRating')?.value || '',
+    impression: document.getElementById('editImpression')?.value || ''
+  };
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'createRereadingWithData',
+        bookId,
+        readingData: readingPayload
+      })
+    });
+
+    const data = await response.json();
+    const today = new Date().toISOString().slice(0, 10);
+
+    state.readings.push({
+      '読書体験ID': data.result.readingId,
+      '書籍ID': bookId,
+      '読始日': readingPayload.startDate,
+      '読了日': readingPayload.finishDate,
+      '評価': readingPayload.rating,
+      '感想': readingPayload.impression,
+      '読了場所': readingPayload.finishPlace,
+      '作成日時': today,
+      '更新日時': today
+    });
+
+    showBookDetail(bookId);
+
+  } catch (error) {
+    alert(`再読の保存に失敗しました: ${error.message}`);
+  }
+}
+
+function closeEditWithoutSave(bookId) {
+  showBookDetail(bookId);
+}
+
+    
     .replaceAll("'", '&#039;');
 }

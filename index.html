@@ -168,8 +168,7 @@ async function scanLoop(detector){
 
     const book = data[0];
 
-const cover =
-  book.summary?.cover || '';
+    if(!book){
 
       document.getElementById('status')
         .textContent =
@@ -177,6 +176,9 @@ const cover =
 
       return;
     }
+
+    const cover =
+      book.summary?.cover || '';
 
     const title =
       book.summary?.title || '';
@@ -188,19 +190,19 @@ const cover =
       book.summary?.publisher || '';
 
     document.getElementById('status')
-  .innerHTML =
-  `
-  ${cover ? `<img src="${cover}" style="width:140px;border-radius:8px;margin-bottom:16px;">` : ''}
+      .innerHTML =
+      `
+      ${cover ? `<img src="${cover}" style="width:140px;border-radius:8px;margin-bottom:16px;">` : ''}
 
-  <b>タイトル</b><br>
-  ${title}<br><br>
+      <b>タイトル</b><br>
+      ${title}<br><br>
 
-  <b>著者</b><br>
-  ${author}<br><br>
+      <b>著者</b><br>
+      ${author}<br><br>
 
-  <b>出版社</b><br>
-  ${publisher}
-  `;
+      <b>出版社</b><br>
+      ${publisher}
+      `;
 
   }catch(error){
 

@@ -64,10 +64,29 @@ function showHomeView() {
   state.currentView = 'home';
   setActiveNav('home');
 
-  const readingBooks = getBooksByStatus('reading');
-  const tsundokuBooks = shuffleArray(getBooksByStatus('tsundoku')).slice(0, 4);
-  const wantBooks = shuffleArray(getBooksByStatus('want')).slice(0, 3);
-  const pausedBooks = shuffleArray(getBooksByStatus('paused')).slice(0, 1);
+const allReadingBooks =
+  getBooksByStatus('reading');
+
+const allTsundokuBooks =
+  getBooksByStatus('tsundoku');
+
+const allWantBooks =
+  getBooksByStatus('want');
+
+const allPausedBooks =
+  getBooksByStatus('paused');
+
+const readingBooks =
+  allReadingBooks.slice(0,4);
+
+const tsundokuBooks =
+  allTsundokuBooks.slice(0,4);
+
+const wantBooks =
+  allWantBooks.slice(0,3);
+
+const pausedBooks =
+  allPausedBooks.slice(0,1);
   const onThisDayBooks = getOnThisDayBooks();
   const stats = getReadingStats();
 
@@ -93,7 +112,7 @@ function showHomeView() {
 
     <section class="section">
       <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">
-  📖 机の上（${readingBooks.length}冊）
+  📖 机の上（${allReadingBooks.length}冊）
 </h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(readingBooks, '読書中の本', false)}
@@ -102,7 +121,7 @@ function showHomeView() {
 
     <section class="section">
       <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">
-  📦 積読（${tsundokuBooks.length}冊）
+  📦 積読（${allTsundokuBooks.length}冊）
 </h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(tsundokuBooks, '積読', false)}
@@ -112,7 +131,7 @@ function showHomeView() {
     <section class="section home-split-section">
       <div>
         <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">
-  💭 気になる本（${wantBooks.length}冊）
+  💭 気になる本（${allWantBooks.length}冊）
 </h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(wantBooks, '気になる本', false)}
@@ -121,7 +140,7 @@ function showHomeView() {
 
       <div>
         <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">
-  ⏸ 中断（${pausedBooks.length}冊）
+  ⏸ 中断（${allPausedBooks.length}冊）
 </h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(pausedBooks, '中断本', false)}

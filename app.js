@@ -1,4 +1,4 @@
-const GAS_WEB_APP_URL = 'PASTE_YOUR_GAS_URL_HERE';
+const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_NMS07mrkNVrp3d-mATEBUOG8E3fnfbzSevRDNKM-YTiuwy8W0k1-S0Lftcq6UbxflA/exec';
 
 const state = {
   books: [],

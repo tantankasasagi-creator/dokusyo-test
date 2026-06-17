@@ -115,16 +115,29 @@ async function scanLoop(detector){
     const barcodes =
       await detector.detect(video);
 
-    if(barcodes.length){
+   if(barcodes.length){
 
-      const code =
-        barcodes[0].rawValue;
+  const isbnCode = barcodes.find(barcode =>
+    barcode.rawValue.startsWith('978') ||
+    barcode.rawValue.startsWith('979')
+  );
 
-      document.getElementById('isbn')
-        .textContent = code;
+  if(!isbnCode){
+    requestAnimationFrame(
+      () => scanLoop(detector)
+    );
+    return;
+  }
 
-      document.getElementById('status')
-        .textContent = '取得成功！';
+  const code = isbnCode.rawValue;
+
+  document.getElementById('isbn')
+    .textContent = code;
+
+  document.getElementById('status')
+    .textContent = '書誌情報取得中...';
+
+  getBookInfo(code);
 
       if(stream){
         stream.getTracks()
@@ -141,6 +154,59 @@ async function scanLoop(detector){
   );
 }
 
+  async function getBookInfo(isbn){
+
+  try{
+
+    const response =
+      await fetch(
+        `https://api.openbd.jp/v1/get?isbn=${isbn}`
+      );
+
+    const data =
+      await response.json();
+
+    const book = data[0];
+
+    if(!book){
+
+      document.getElementById('status')
+        .textContent =
+        'openBDにデータがありません';
+
+      return;
+    }
+
+    const title =
+      book.summary?.title || '';
+
+    const author =
+      book.summary?.author || '';
+
+    const publisher =
+      book.summary?.publisher || '';
+
+    document.getElementById('status')
+      .innerHTML =
+      `
+      <b>タイトル</b><br>
+      ${title}<br><br>
+
+      <b>著者</b><br>
+      ${author}<br><br>
+
+      <b>出版社</b><br>
+      ${publisher}
+      `;
+
+  }catch(error){
+
+    document.getElementById('status')
+      .textContent =
+      'openBD取得失敗';
+  }
+
+}
 </script>
 
 </body>

@@ -92,14 +92,18 @@ function showHomeView() {
     </section>
 
     <section class="section">
-      <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">📖 机の上</h2>
+      <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">
+  📖 机の上（${readingBooks.length}冊）
+</h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(readingBooks, '読書中の本', false)}
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">📦 積読</h2>
+      <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">
+  📦 積読（${tsundokuBooks.length}冊）
+</h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(tsundokuBooks, '積読', false)}
       </div>
@@ -107,14 +111,18 @@ function showHomeView() {
 
     <section class="section home-split-section">
       <div>
-        <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">💭 気になる本</h2>
+        <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">
+  💭 気になる本（${wantBooks.length}冊）
+</h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(wantBooks, '気になる本', false)}
         </div>
       </div>
 
       <div>
-        <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">⏸ 中断</h2>
+        <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">
+  ⏸ 中断（${pausedBooks.length}冊）
+</h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(pausedBooks, '中断本', false)}
         </div>

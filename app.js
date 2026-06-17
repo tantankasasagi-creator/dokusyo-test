@@ -235,7 +235,182 @@ function showOtherView() {
 }
 
 function showRegisterView() {
-  alert('本登録は次フェーズで移植します');
+  setChromeVisible(false);
+  setActiveNav('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="goBackToMainView()">←</button>
+      <div></div>
+    </div>
+
+    <h1 class="page-title">本を探す</h1>
+
+    <div class="register-box">
+      <div class="input-row">
+        <input id="bookSearchInput" class="text-input" type="text" placeholder="タイトルまたはISBN" oninput="renderSuggestions()">
+        <button class="camera-button" onclick="searchIsbnFromInput()">🔎</button>
+      </div>
+
+      <div id="suggestionList" class="suggestion-list"></div>
+    </div>
+  `;
+}
+
+function renderSuggestions() {
+  const keyword = document.getElementById('bookSearchInput').value.trim();
+  const container = document.getElementById('suggestionList');
+
+  if (!keyword) {
+    container.innerHTML = '';
+    return;
+  }
+
+  const matches = state.books.filter(book =>
+    String(book['タイトル'] || '').includes(keyword) ||
+    String(book['著者'] || '').includes(keyword)
+  ).slice(0, 10);
+
+  const hasExactTitle = state.books.some(book =>
+    String(book['タイトル'] || '').trim() === keyword
+  );
+
+  const matchHtml = matches.map(book => `
+    <div class="suggestion-item" onclick="showBookDetail('${book['書籍ID']}')">
+      <div class="suggestion-title">${escapeHtml(book['タイトル'])}</div>
+      <div class="subtle">${escapeHtml(book['著者'] || '')}</div>
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    ${matchHtml}
+    ${!hasExactTitle ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
+  `;
+}
+
+async function searchIsbnFromInput() {
+  const input = document.getElementById('bookSearchInput');
+  const keyword = input?.value.trim() || '';
+  const isbn = keyword.replace(/[^0-9Xx]/g, '');
+
+  if (!isbn) {
+    alert('ISBNを入力してください');
+    return;
+  }
+
+  const container = document.getElementById('suggestionList');
+  container.innerHTML = '<div class="subtle">ISBNを検索しています...</div>';
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'fetchBookByIsbn',
+        isbn
+      })
+    });
+
+    const data = await response.json();
+    renderIsbnResult(data.result);
+
+  } catch (error) {
+    container.innerHTML =
+      `<div class="subtle">ISBN検索に失敗しました: ${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function renderIsbnResult(result) {
+  const container = document.getElementById('suggestionList');
+
+  if (!result.found) {
+    container.innerHTML = `
+      <div class="suggestion-item">
+        <div class="suggestion-title">書誌情報が見つかりませんでした</div>
+        <div class="subtle">ISBN: ${escapeHtml(result.isbn)}</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="isbn-result-card">
+      <div class="isbn-result-cover">
+        ${
+          result.coverUrl
+            ? `<img class="book-cover" src="${escapeHtml(result.coverUrl).replace(/^http:/, 'https:')}">`
+            : `<div class="dummy-cover">${escapeHtml(result.title || 'No Title')}</div>`
+        }
+      </div>
+      <div class="isbn-result-info">
+        <div class="suggestion-title">${escapeHtml(result.title)}</div>
+        <div class="subtle">${escapeHtml(result.author || '')}</div>
+        <div class="subtle">${escapeHtml(result.publisher || '')}</div>
+        <div class="subtle">ISBN: ${escapeHtml(result.isbn)}</div>
+
+        <button
+          class="register-book-button"
+          onclick='registerBookFromIsbn(${JSON.stringify(result)})'
+        >
+          この本を登録
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+async function registerBookFromIsbn(bookData) {
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'createBookFromIsbn',
+        bookData
+      })
+    });
+
+    const data = await response.json();
+    const result = data.result;
+
+    if (result.duplicated) {
+      await loadInitialData();
+      showBookDetail(result.bookId);
+      return;
+    }
+
+    await loadInitialData();
+    showBookDetail(result.bookId);
+
+  } catch (error) {
+    alert(`登録失敗: ${error.message}`);
+  }
+}
+
+async function createNewBookFromSearch() {
+  const title = document.getElementById('bookSearchInput')?.value.trim();
+
+  if (!title) {
+    alert('タイトルを入力してください');
+    return;
+  }
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'createBook',
+        title
+      })
+    });
+
+    const data = await response.json();
+    const result = data.result;
+
+    await loadInitialData();
+    showBookDetail(result.bookId);
+
+  } catch (error) {
+    alert(`新規作成に失敗しました: ${error.message}`);
+  }
 }
 
 function showBookDetail(bookId) {

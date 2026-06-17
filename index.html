@@ -64,8 +64,8 @@ ISBN未取得
 
 <hr>
 
-<button onclick="testGasApi()">
-GAS疎通テスト
+<button onclick="getBooks()">
+本一覧取得テスト
 </button>
 
 <div id="gasResult">
@@ -224,22 +224,21 @@ async function scanLoop(detector){
 }
   const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_NMS07mrkNVrp3d-mATEBUOG8E3fnfbzSevRDNKM-YTiuwy8W0k1-S0Lftcq6UbxflA/exec';
 
-async function testGasApi(){
+async function getBooks(){
 
   const resultBox =
     document.getElementById('gasResult');
 
   resultBox.textContent =
-    'GAS通信中...';
+    '本一覧取得中...';
 
   try{
 
     const response =
       await fetch(GAS_WEB_APP_URL, {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'test',
-          app: 'dokusyo'
+        method:'POST',
+        body:JSON.stringify({
+          type:'getBooks'
         })
       });
 
@@ -247,12 +246,14 @@ async function testGasApi(){
       await response.json();
 
     resultBox.textContent =
-      JSON.stringify(data, null, 2);
+      `取得件数: ${data.books.length}件`;
+
+    console.log(data.books);
 
   }catch(error){
 
     resultBox.textContent =
-      'GAS通信失敗\n' + error.message;
+      '取得失敗\n' + error.message;
   }
 }
 </script>

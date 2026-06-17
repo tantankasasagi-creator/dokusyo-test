@@ -1188,6 +1188,8 @@ function escapeHtml(value) {
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
 
 function startRereading(bookId) {
   showEditView(bookId, '__REREAD_DRAFT__');
@@ -1467,6 +1469,6 @@ function closeEditWithoutSave(bookId) {
   showBookDetail(bookId);
 }
 
-    
-    .replaceAll("'", '&#039;');
-}
+
+
+

@@ -245,8 +245,21 @@ async function getBooks(){
     const data =
       await response.json();
 
-    resultBox.textContent =
-      `取得件数: ${data.books.length}件`;
+resultBox.innerHTML =
+  data.books
+    .slice(0, 20)
+    .map(book => `
+      <div style="
+        background:white;
+        padding:12px;
+        margin-bottom:8px;
+        border-radius:12px;
+      ">
+        <b>${book.title || '無題'}</b><br>
+        ${book.author || ''}
+      </div>
+    `)
+    .join('');
 
     console.log(data.books);
 

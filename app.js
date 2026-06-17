@@ -250,6 +250,7 @@ function showRegisterView() {
       <div class="input-row">
         <input id="bookSearchInput" class="text-input" type="text" placeholder="タイトルまたはISBN" oninput="renderSuggestions()">
         <button class="camera-button" onclick="searchIsbnFromInput()">🔎</button>
+        <button class="camera-button" onclick="showIsbnCameraView()">📷</button>
       </div>
 
       <div id="suggestionList" class="suggestion-list"></div>
@@ -378,7 +379,7 @@ async function registerBookFromIsbn(bookData) {
     }
 
     await loadInitialData();
-    showBookDetail(result.bookId);
+    showEditView(result.bookId);
 
   } catch (error) {
     alert(`登録失敗: ${error.message}`);
@@ -406,7 +407,7 @@ async function createNewBookFromSearch() {
     const result = data.result;
 
     await loadInitialData();
-    showBookDetail(result.bookId);
+    showEditView(result.bookId);
 
   } catch (error) {
     alert(`新規作成に失敗しました: ${error.message}`);
@@ -1225,10 +1226,10 @@ function showEditView(bookId, readingId = '') {
 
     <div class="edit-form">
       ${renderEditField('タイトル', 'editTitle', book['タイトル'])}
-      ${renderEditField('著者', 'editAuthor', book['著者'])}
+      ${renderChipInputField('著者', 'editAuthor', book['著者'], false, 'authors')}
       ${renderEditField('出版社', 'editPublisher', book['出版社'])}
-      ${renderEditField('ジャンル', 'editGenre', book['ジャンル'])}
-      ${renderEditField('タグ', 'editTags', book['タグ'])}
+      ${renderGenreSelect(book['ジャンル'])}
+      ${renderChipInputField('タグ', 'editTags', book['タグ'], true, 'tags')}
 
       <div class="edit-divider"></div>
 
@@ -1237,7 +1238,7 @@ function showEditView(bookId, readingId = '') {
           ${renderEditField('購入日', 'editPurchaseDate', formatDateForInput(book['購入日']), 'date')}
         </div>
         <div>
-          ${renderEditField('購入場所', 'editPurchasePlace', book['購入場所'])}
+          ${renderChipInputField('購入場所', 'editPurchasePlace', book['購入場所'], false, 'purchasePlaces')}
         </div>
       </div>
 
@@ -1252,7 +1253,7 @@ function showEditView(bookId, readingId = '') {
         </div>
       </div>
 
-      ${renderEditField('読了場所', 'editFinishPlace', latestReading['読了場所'])}
+      ${renderChipInputField('読了場所', 'editFinishPlace', latestReading['読了場所'], false, 'finishPlaces')}
       ${renderRatingField(latestReading['評価'])}
 
       <label class="edit-label" for="editImpression">感想</label>
@@ -1468,6 +1469,360 @@ async function saveRereadDraftAndClose(bookId) {
 function closeEditWithoutSave(bookId) {
   showBookDetail(bookId);
 }
+
+let isbnCameraStream = null;
+let isbnScanActive = false;
+
+function showIsbnCameraView() {
+  setChromeVisible(false);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="stopIsbnCamera(); showRegisterView();">←</button>
+      <div></div>
+    </div>
+
+    <h1 class="page-title">ISBNを読み取る</h1>
+
+    <div class="register-box">
+      <video id="isbnCameraVideo" class="camera-preview" autoplay playsinline></video>
+      <p id="isbnCameraMessage" class="subtle">カメラを起動しています...</p>
+    </div>
+  `;
+
+  startIsbnCamera();
+}
+
+async function startIsbnCamera() {
+  const video = document.getElementById('isbnCameraVideo');
+  const message = document.getElementById('isbnCameraMessage');
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    message.textContent = 'この端末ではカメラを使用できません。';
+    return;
+  }
+
+  if (!('BarcodeDetector' in window)) {
+    message.textContent = 'このブラウザはバーコード読み取りに対応していません。';
+    return;
+  }
+
+  try {
+    const detector = new BarcodeDetector({ formats: ['ean_13'] });
+
+    isbnCameraStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false
+    });
+
+    video.srcObject = isbnCameraStream;
+    isbnScanActive = true;
+    message.textContent = 'ISBNバーコードを映してください。';
+
+    scanIsbnLoop(detector);
+
+  } catch (error) {
+    message.textContent = `カメラを起動できませんでした: ${error.message}`;
+  }
+}
+
+async function scanIsbnLoop(detector) {
+  if (!isbnScanActive) return;
+
+  const video = document.getElementById('isbnCameraVideo');
+  if (!video) return;
+
+  try {
+    const barcodes = await detector.detect(video);
+
+    const isbnBarcode = barcodes.find(barcode => {
+      const value = String(barcode.rawValue || '');
+      return value.length === 13 &&
+        (value.startsWith('978') || value.startsWith('979'));
+    });
+
+    if (isbnBarcode) {
+      const isbn = isbnBarcode.rawValue;
+
+      stopIsbnCamera();
+      showRegisterView();
+
+      setTimeout(() => {
+        const input = document.getElementById('bookSearchInput');
+        if (input) input.value = isbn;
+        searchIsbnFromInput();
+      }, 100);
+
+      return;
+    }
+
+  } catch (error) {
+    // 読み取り途中の一時エラーは無視
+  }
+
+  requestAnimationFrame(() => scanIsbnLoop(detector));
+}
+
+function stopIsbnCamera() {
+  isbnScanActive = false;
+
+  if (isbnCameraStream) {
+    isbnCameraStream.getTracks().forEach(track => track.stop());
+    isbnCameraStream = null;
+  }
+}
+
+function splitChipValue(value) {
+  return String(value || '')
+    .split('|')
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function renderChipInputField(label, id, value, withHash = false, suggestionType = '') {
+  const items = splitChipValue(value);
+
+  return `
+    <label class="edit-label">${label}</label>
+    <input
+      id="${id}Input"
+      class="edit-input"
+      type="text"
+      placeholder="${label}を入力してEnter"
+      enterkeyhint="enter"
+      oninput="renderChipSuggestions('${id}', ${withHash}, '${suggestionType}')"
+      onkeydown="handleChipInputKeydown(event, '${id}', ${withHash})"
+    >
+    <div id="${id}SuggestionList" class="chip-suggestion-list"></div>
+    <div id="${id}ChipList" class="chip-list">
+      ${items.map(item => renderChip(id, item, withHash)).join('')}
+    </div>
+    <input id="${id}" type="hidden" value="${escapeHtml(items.join('|'))}">
+  `;
+}
+
+function renderChip(id, value, withHash = false) {
+  const label = withHash && !String(value).startsWith('#')
+    ? `#${value}`
+    : value;
+
+  return `
+    <span class="input-chip" data-value="${escapeHtml(value)}">
+      ${escapeHtml(label)}
+      <button type="button" class="chip-remove" onclick="removeChip(this, '${id}')">×</button>
+    </span>
+  `;
+}
+
+function handleChipInputKeydown(event, id, withHash = false) {
+  if (event.key !== 'Enter') return;
+
+  event.preventDefault();
+
+  const input = event.target;
+  const value = input.value.trim();
+
+  if (!value) return;
+
+  addChip(id, value, withHash);
+  input.value = '';
+
+  const list = document.getElementById(`${id}SuggestionList`);
+  if (list) list.innerHTML = '';
+}
+
+function renderChipSuggestions(id, withHash = false, suggestionType = '') {
+  const input = document.getElementById(`${id}Input`);
+  const list = document.getElementById(`${id}SuggestionList`);
+  const hidden = document.getElementById(id);
+
+  if (!input || !list || !hidden) return;
+
+  const keyword = input.value.trim();
+  if (!keyword || !suggestionType) {
+    list.innerHTML = '';
+    return;
+  }
+
+  const currentItems = splitChipValue(hidden.value);
+  const suggestions = getChipSuggestions(suggestionType, keyword, currentItems).slice(0, 6);
+
+  list.innerHTML = suggestions.map(value => {
+    const display = withHash && !value.startsWith('#') ? `#${value}` : value;
+
+    return `
+      <button
+        type="button"
+        class="chip-suggestion"
+        onclick="selectChipSuggestion('${id}', '${escapeJs(value)}', ${withHash})"
+      >
+        ${escapeHtml(display)}
+      </button>
+    `;
+  }).join('');
+}
+
+function getChipSuggestions(type, keyword, currentItems) {
+  let source = [];
+
+  if (type === 'authors') {
+    source = state.books.flatMap(book => splitChipValue(book['著者']));
+  }
+
+  if (type === 'tags') {
+    source = state.books.flatMap(book =>
+      splitChipValue(book['タグ']).map(tag => tag.replace(/^#/, ''))
+    );
+  }
+
+  if (type === 'purchasePlaces') {
+    source = state.books
+      .map(book => book['購入場所'])
+      .filter(Boolean);
+  }
+
+  if (type === 'finishPlaces') {
+    source = state.readings
+      .map(reading => reading['読了場所'])
+      .filter(Boolean);
+  }
+
+  const unique = [...new Set(source)]
+    .map(v => String(v || '').trim())
+    .filter(Boolean);
+
+  return unique.filter(item =>
+    item.includes(keyword) &&
+    !currentItems.includes(item)
+  );
+}
+
+function selectChipSuggestion(id, value, withHash = false) {
+  addChip(id, value, withHash);
+
+  const input = document.getElementById(`${id}Input`);
+  const list = document.getElementById(`${id}SuggestionList`);
+
+  if (input) input.value = '';
+  if (list) list.innerHTML = '';
+}
+
+function addChip(id, value, withHash = false) {
+  const hidden = document.getElementById(id);
+  const list = document.getElementById(`${id}ChipList`);
+  if (!hidden || !list) return;
+
+  const items = splitChipValue(hidden.value);
+
+  if (!items.includes(value)) {
+    items.push(value);
+  }
+
+  hidden.value = items.join('|');
+  list.innerHTML = items.map(item => renderChip(id, item, withHash)).join('');
+}
+
+function removeChip(button, id) {
+  const chip = button.closest('.input-chip');
+  const value = chip?.dataset.value;
+  const hidden = document.getElementById(id);
+  const list = document.getElementById(`${id}ChipList`);
+  if (!value || !hidden || !list) return;
+
+  const items = splitChipValue(hidden.value).filter(item => item !== value);
+
+  hidden.value = items.join('|');
+  list.innerHTML = items.map(item => renderChip(id, item)).join('');
+}
+
+function escapeJs(value) {
+  return String(value ?? '')
+    .replaceAll('\\', '\\\\')
+    .replaceAll("'", "\\'");
+}
+
+function renderGenreSelect(currentValue) {
+  const currentGenres = String(currentValue || '')
+    .split('|')
+    .map(v => v.trim())
+    .filter(Boolean);
+
+  const displayText = currentGenres.length
+    ? currentGenres.join('｜')
+    : 'ジャンルを選ぶ';
+
+  return `
+    <label class="edit-label">ジャンル</label>
+    <button type="button" class="edit-input genre-select-button" onclick="openGenreModal()">
+      <span id="genreDisplayText">${escapeHtml(displayText)}</span>
+      <span>›</span>
+    </button>
+    <input id="editGenre" type="hidden" value="${escapeHtml(currentGenres.join('|'))}">
+    <div id="genreModal" class="modal-backdrop hidden" onclick="closeGenreModal(event)">
+      <div class="bottom-sheet" onclick="event.stopPropagation()">
+        <div class="bottom-sheet-header">
+          <div class="bottom-sheet-title">ジャンルを選ぶ</div>
+          <button type="button" class="mini-button" onclick="applyGenreModal()">決定</button>
+        </div>
+        <div class="genre-modal-list">
+          ${renderGenreModalButtons(currentGenres)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderGenreModalButtons(currentGenres) {
+  const activeGenres = (state.genres || [])
+    .filter(g => String(g['有効']).toUpperCase() !== 'FALSE')
+    .sort((a, b) => Number(a['表示順'] || 999) - Number(b['表示順'] || 999));
+
+  return activeGenres.map(genre => {
+    const name = genre['ジャンル名'];
+    const selected = currentGenres.includes(name);
+
+    return `
+      <button
+        type="button"
+        class="genre-modal-chip ${selected ? 'selected' : ''}"
+        data-genre="${escapeHtml(name)}"
+        onclick="toggleGenreModalChip(this)"
+      >
+        ${escapeHtml(name)}
+      </button>
+    `;
+  }).join('');
+}
+
+function openGenreModal() {
+  document.getElementById('genreModal')?.classList.remove('hidden');
+}
+
+function closeGenreModal(event) {
+  if (event.target.id === 'genreModal') {
+    document.getElementById('genreModal')?.classList.add('hidden');
+  }
+}
+
+function toggleGenreModalChip(button) {
+  button.classList.toggle('selected');
+}
+
+function applyGenreModal() {
+  const selectedGenres = [...document.querySelectorAll('#genreModal .genre-modal-chip.selected')]
+    .map(btn => btn.dataset.genre);
+
+  const value = selectedGenres.join('|');
+  const displayText = selectedGenres.length
+    ? selectedGenres.join('｜')
+    : 'ジャンルを選ぶ';
+
+  document.getElementById('editGenre').value = value;
+  document.getElementById('genreDisplayText').textContent = displayText;
+  document.getElementById('genreModal')?.classList.add('hidden');
+}
+
+
 
 
 

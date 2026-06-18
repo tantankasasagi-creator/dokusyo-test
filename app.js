@@ -108,7 +108,7 @@ const pausedBooks =
 </div>
 
 <div class="quote-home-book">
-  ── ${escapeHtml(todayQuote.title)}
+  『${escapeHtml(todayQuote.title)}』
 </div>
   </div>
 </section>

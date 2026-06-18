@@ -1,4 +1,5 @@
 const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx_NMS07mrkNVrp3d-mATEBUOG8E3fnfbzSevRDNKM-YTiuwy8W0k1-S0Lftcq6UbxflA/exec';
+const OCR_WORKER_URL = 'https://dokusyo-ocr.tantankasasagi.workers.dev/';
 
 const state = {
   books: [],
@@ -2048,12 +2049,51 @@ function selectQuoteImage() {
 }
 
 async function handleQuoteImage(event) {
-
   const file = event.target.files?.[0];
-
   if (!file) return;
 
-  alert(
-    'OCR機能は次で実装します。\n\n画像選択は成功しました。'
-  );
+  const textarea = document.getElementById('quoteTextInput');
+  if (!textarea) return;
+
+  const originalText = textarea.value;
+  textarea.value = originalText
+    ? `${originalText}\n\nOCR読み取り中...`
+    : 'OCR読み取り中...';
+
+  try {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(OCR_WORKER_URL, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.message || 'OCRに失敗しました');
+    }
+
+    const text = cleanOcrText(data.text || '');
+
+    textarea.value = originalText
+      ? `${originalText}\n\n${text}`
+      : text;
+
+  } catch (error) {
+    textarea.value = originalText;
+    alert(`OCRに失敗しました: ${error.message}`);
+  } finally {
+    event.target.value = '';
+  }
+}
+
+function cleanOcrText(text) {
+  return String(text || '')
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .join('\n');
 }

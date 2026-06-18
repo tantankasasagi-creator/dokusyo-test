@@ -1297,7 +1297,7 @@ function showEditView(bookId, readingId = '') {
 
       <section class="edit-sub-section">
         <div class="edit-sub-title">引用</div>
-        <button class="mini-button" onclick="alert('引用追加は次フェーズ')">＋追加</button>
+        <button class="mini-button" onclick="showQuoteAddView('${bookId}')">＋追加</button>
       </section>
 
       <section class="edit-sub-section">

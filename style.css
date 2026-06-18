@@ -654,3 +654,13 @@
   font-weight: 600;
   margin-left: 4px;
 }
+
+.quote-card {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.quote-card:last-child {
+  border-bottom: none;
+}
+

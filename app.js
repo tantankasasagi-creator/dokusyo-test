@@ -476,19 +476,8 @@ function showBookDetail(bookId) {
 
     ${readings.map((reading, index) => renderReadingBlock(reading, index)).join('')}
 
-    <section class="archive-block">
-      <div class="archive-heading">引用</div>
-      ${
-        quotes.length
-          ? quotes.map(q => `<p class="archive-text">${escapeHtml(q['引用本文'])}</p>`).join('')
-          : '<div class="subtle">引用はまだありません。</div>'
-      }
         <section class="archive-block">
-      <div class="edit-sub-section">
-        <div class="archive-heading">引用</div>
-        <button class="mini-button" onclick="showQuoteAddView('${bookId}')">＋追加</button>
-      </div>
-
+      <div class="archive-heading">引用</div>
       ${
         quotes.length
           ? quotes.map(q => renderQuoteBlock(q)).join('')

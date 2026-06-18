@@ -483,11 +483,17 @@ function showBookDetail(bookId) {
           ? quotes.map(q => `<p class="archive-text">${escapeHtml(q['引用本文'])}</p>`).join('')
           : '<div class="subtle">引用はまだありません。</div>'
       }
-    </section>
+        <section class="archive-block">
+      <div class="edit-sub-section">
+        <div class="archive-heading">引用</div>
+        <button class="mini-button" onclick="showQuoteAddView('${bookId}')">＋追加</button>
+      </div>
 
-    <section class="archive-block">
-      <div class="archive-heading">この本から生まれた本</div>
-      <div class="subtle">本リンクは次フェーズで実装します。</div>
+      ${
+        quotes.length
+          ? quotes.map(q => renderQuoteBlock(q)).join('')
+          : '<div class="subtle">引用はまだありません。</div>'
+      }
     </section>
 
     <div class="tag-line">${escapeHtml(formatTags(book['タグ']))}</div>
@@ -1879,6 +1885,100 @@ function showStatusBookList(status, title) {
   `;
 }
 
+function renderQuoteBlock(quote) {
+  const page = quote['ページ']
+    ? `p.${escapeHtml(quote['ページ'])}`
+    : '';
+
+  const date = quote['登録日']
+    ? formatDate(quote['登録日'])
+    : '';
+
+  return `
+    <div class="quote-card">
+      ${page || date ? `<div class="archive-meta">${page}${page && date ? '　' : ''}${date}</div>` : ''}
+      <p class="archive-text">${escapeHtml(quote['引用本文'] || '')}</p>
+    </div>
+  `;
+}
+
+function showQuoteAddView(bookId) {
+  setChromeVisible(false);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="showBookDetail('${bookId}')">×</button>
+      <button class="icon-button" onclick="saveQuoteAndClose('${bookId}')">保存</button>
+    </div>
+
+    <h1 class="page-title">引用を追加</h1>
+
+    <div class="edit-form">
+      <label class="edit-label" for="quotePageInput">ページ</label>
+      <input
+        id="quotePageInput"
+        class="edit-input"
+        type="text"
+        inputmode="numeric"
+        placeholder="例：32"
+      >
+
+      <label class="edit-label" for="quoteTextInput">引用本文</label>
+      <textarea
+        id="quoteTextInput"
+        class="edit-textarea"
+        rows="10"
+        placeholder="引用を入力"
+      ></textarea>
+    </div>
+  `;
+}
+
+async function saveQuoteAndClose(bookId) {
+  const page =
+    document.getElementById('quotePageInput')?.value.trim() || '';
+
+  const text =
+    document.getElementById('quoteTextInput')?.value.trim() || '';
+
+  if (!text) {
+    alert('引用本文を入力してください');
+    return;
+  }
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'createQuote',
+        bookId,
+        quoteData: {
+          page,
+          text
+        }
+      })
+    });
+
+    const data = await response.json();
+    const result = data.result;
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    state.quotes.push({
+      '引用ID': result.quoteId,
+      '書籍ID': bookId,
+      'ページ': page,
+      '引用本文': text,
+      '登録日': today,
+      '作成日時': today
+    });
+
+    showBookDetail(bookId);
+
+  } catch (error) {
+    alert(`引用の保存に失敗しました: ${error.message}`);
+  }
+}
 
 
 

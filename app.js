@@ -103,14 +103,13 @@ const pausedBooks =
   <div class="register-box quote-home-card"
        onclick="showBookDetail('${todayQuote.bookId}')">
 
-    <div class="quote-home-text">
-  ${escapeHtml(todayQuote.text).slice(0, 180)}
-  ${todayQuote.text.length > 180 ? '…' : ''}
+   <div class="quote-home-text">
+  「${escapeHtml(todayQuote.text)}」
 </div>
 
-    <div class="subtle">
-      ${escapeHtml(todayQuote.title)}
-    </div>
+<div class="quote-home-book">
+  ── ${escapeHtml(todayQuote.title)}
+</div>
   </div>
 </section>
 ` : ''}

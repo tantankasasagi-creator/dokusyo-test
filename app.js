@@ -1922,8 +1922,28 @@ function showQuoteAddView(bookId) {
         inputmode="numeric"
         placeholder="例：32"
       >
-
+      
       <label class="edit-label" for="quoteTextInput">引用本文</label>
+      
+      <div style="margin-bottom:12px;">
+  <button
+    type="button"
+    class="secondary-button"
+    onclick="selectQuoteImage()"
+  >
+    📷 画像から読み取り
+  </button>
+
+  <input
+    id="quoteImageInput"
+    type="file"
+    accept="image/*"
+    capture="environment"
+    style="display:none"
+    onchange="handleQuoteImage(event)"
+  >
+</div>
+
       <textarea
         id="quoteTextInput"
         class="edit-textarea"
@@ -2023,6 +2043,17 @@ function getTodayQuoteOrImpression() {
   return null;
 }
 
+function selectQuoteImage() {
+  document.getElementById('quoteImageInput')?.click();
+}
 
+async function handleQuoteImage(event) {
 
+  const file = event.target.files?.[0];
 
+  if (!file) return;
+
+  alert(
+    'OCR機能は次で実装します。\n\n画像選択は成功しました。'
+  );
+}

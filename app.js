@@ -104,8 +104,9 @@ const pausedBooks =
        onclick="showBookDetail('${todayQuote.bookId}')">
 
     <div class="quote-home-text">
-      ${escapeHtml(todayQuote.text)}
-    </div>
+  ${escapeHtml(todayQuote.text).slice(0, 180)}
+  ${todayQuote.text.length > 180 ? '…' : ''}
+</div>
 
     <div class="subtle">
       ${escapeHtml(todayQuote.title)}

@@ -664,3 +664,12 @@
   border-bottom: none;
 }
 
+.quote-home-card {
+  cursor: pointer;
+}
+
+.quote-home-text {
+  font-size: 18px;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}

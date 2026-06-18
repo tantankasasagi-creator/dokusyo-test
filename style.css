@@ -585,7 +585,7 @@
 
 .home-split-section {
   display: grid;
-  grid-template-columns: 1fr 86px;
+  grid-template-columns: minmax(0, 1fr) 112px;
   gap: 14px;
 }
 

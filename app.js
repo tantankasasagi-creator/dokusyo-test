@@ -2055,10 +2055,7 @@ async function handleQuoteImage(event) {
   const textarea = document.getElementById('quoteTextInput');
   if (!textarea) return;
 
-  const originalText = textarea.value;
-  textarea.value = originalText
-    ? `${originalText}\n\nOCR読み取り中...`
-    : 'OCR読み取り中...';
+  textarea.value = 'OCR読み取り中...';
 
   try {
     const formData = new FormData();
@@ -2077,12 +2074,10 @@ async function handleQuoteImage(event) {
 
     const text = cleanOcrText(data.text || '');
 
-    textarea.value = originalText
-      ? `${originalText}\n\n${text}`
-      : text;
+    textarea.value = text;
 
   } catch (error) {
-    textarea.value = originalText;
+    textarea.value = '';
     alert(`OCRに失敗しました: ${error.message}`);
   } finally {
     event.target.value = '';

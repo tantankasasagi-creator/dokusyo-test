@@ -2069,6 +2069,8 @@ formData.append('image', resizedFile);
     });
 
     const data = await response.json();
+    console.log(data);
+alert(JSON.stringify(data));
     
     if (!data.success) {
       throw new Error(data.message || 'OCRに失敗しました');

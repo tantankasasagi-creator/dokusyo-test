@@ -81,13 +81,13 @@ const readingBooks =
   allReadingBooks.slice(0,4);
 
 const tsundokuBooks =
-  allTsundokuBooks.slice(0,4);
+  shuffleArray(allTsundokuBooks).slice(0,4);
 
 const wantBooks =
-  allWantBooks.slice(0,3);
+  shuffleArray(allWantBooks).slice(0,3);
 
 const pausedBooks =
-  allPausedBooks.slice(0,1);
+  shuffleArray(allPausedBooks).slice(0,1);
   const onThisDayBooks = getOnThisDayBooks();
   const stats = getReadingStats();
   const todayQuote = getTodayQuoteOrImpression();
@@ -2136,4 +2136,8 @@ function loadImageFromFile(file) {
 
     image.src = url;
   });
+}
+
+function shuffleArray(array) {
+  return [...array].sort(() => Math.random() - 0.5);
 }

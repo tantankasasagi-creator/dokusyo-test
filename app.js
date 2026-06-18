@@ -89,19 +89,30 @@ const pausedBooks =
   allPausedBooks.slice(0,1);
   const onThisDayBooks = getOnThisDayBooks();
   const stats = getReadingStats();
-
+  const todayQuote = getTodayQuoteOrImpression();
+  
   document.getElementById('app').innerHTML = `
     <div class="subtle">
       今月 ${stats.month}冊　/　今年 ${stats.year}冊　/　累計 ${stats.total}冊　/　${stats.streak}週連続読了中
     </div>
 
-    <section class="section">
-      <h2 class="section-title">引用</h2>
-      <div class="register-box">
-        <div class="subtle">Ver0では後で実装</div>
-        <p>ここに引用か感想をランダム表示します。</p>
-      </div>
-    </section>
+    ${todayQuote ? `
+<section class="section">
+  <h2 class="section-title">📖 今日の一節</h2>
+
+  <div class="register-box quote-home-card"
+       onclick="showBookDetail('${todayQuote.bookId}')">
+
+    <div class="quote-home-text">
+      ${escapeHtml(todayQuote.text)}
+    </div>
+
+    <div class="subtle">
+      ${escapeHtml(todayQuote.title)}
+    </div>
+  </div>
+</section>
+` : ''}
 
     <section class="section">
       <h2 class="section-title">📅 過去の今日</h2>
@@ -1969,7 +1980,48 @@ async function saveQuoteAndClose(bookId) {
   }
 }
 
+function getTodayQuoteOrImpression() {
 
+  const quoteCandidates = state.quotes
+    .filter(q => q['引用本文']);
+
+  if (quoteCandidates.length > 0) {
+
+    const quote =
+      quoteCandidates[Math.floor(Math.random() * quoteCandidates.length)];
+
+    const book =
+      state.books.find(b => b['書籍ID'] === quote['書籍ID']);
+
+    return {
+      bookId: quote['書籍ID'],
+      title: book?.['タイトル'] || '',
+      text: quote['引用本文']
+    };
+  }
+
+  const impressionCandidates = state.readings
+    .filter(r => r['感想']);
+
+  if (impressionCandidates.length > 0) {
+
+    const reading =
+      impressionCandidates[
+        Math.floor(Math.random() * impressionCandidates.length)
+      ];
+
+    const book =
+      state.books.find(b => b['書籍ID'] === reading['書籍ID']);
+
+    return {
+      bookId: reading['書籍ID'],
+      title: book?.['タイトル'] || '',
+      text: reading['感想']
+    };
+  }
+
+  return null;
+}
 
 
 

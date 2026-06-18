@@ -668,8 +668,12 @@
   cursor: pointer;
 }
 
-.quote-home-text {
-  font-size: 18px;
-  line-height: 1.8;
-  margin-bottom: 12px;
+.quote-home-text{
+  font-size:14px;
+  line-height:1.7;
+
+  display:-webkit-box;
+  -webkit-line-clamp:4;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
 }

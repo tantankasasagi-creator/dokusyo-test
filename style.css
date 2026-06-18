@@ -677,3 +677,10 @@
   -webkit-box-orient:vertical;
   overflow:hidden;
 }
+
+.quote-home-book{
+  margin-top:12px;
+  color:var(--muted);
+  font-size:13px;
+  text-align:right;
+}

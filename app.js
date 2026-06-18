@@ -2058,17 +2058,18 @@ async function handleQuoteImage(event) {
   textarea.value = 'OCR読み取り中...';
 
   try {
-    const formData = new FormData();
-    formData.append('image', file);
+    const resizedFile = await resizeImageForOcr(file);
 
+const formData = new FormData();
+formData.append('image', resizedFile);
+    
     const response = await fetch(OCR_WORKER_URL, {
       method: 'POST',
       body: formData
     });
 
     const data = await response.json();
-    console.log(data);
-alert(JSON.stringify(data));
+    
     if (!data.success) {
       throw new Error(data.message || 'OCRに失敗しました');
     }
@@ -2092,4 +2093,45 @@ function cleanOcrText(text) {
     .map(line => line.trim())
     .filter(Boolean)
     .join('\n');
+}
+
+async function resizeImageForOcr(file) {
+  const image = await loadImageFromFile(file);
+
+  const maxWidth = 1200;
+  const scale = Math.min(1, maxWidth / image.width);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(image.width * scale);
+  canvas.height = Math.round(image.height * scale);
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise(resolve => {
+    canvas.toBlob(resolve, 'image/jpeg', 0.72);
+  });
+
+  return new File([blob], 'quote-ocr.jpg', {
+    type: 'image/jpeg'
+  });
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('画像の読み込みに失敗しました'));
+    };
+
+    image.src = url;
+  });
 }

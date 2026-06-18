@@ -124,7 +124,7 @@ const pausedBooks =
 
     <section class="section">
       <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">
-  📖 机の上<span class="section-count">（${allReadingBooks.length}冊）</span>
+  📖 机の上<span class="section-count">（${allReadingBooks.length}）</span>
 </h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(readingBooks, '読書中の本', false)}
@@ -133,7 +133,7 @@ const pausedBooks =
 
     <section class="section">
       <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">
-  📦 積読<span class="section-count">（${allTsundokuBooks.length}冊）</span>
+  📦 積読<span class="section-count">（${allTsundokuBooks.length}）</span>
 </h2>
       <div class="horizontal-books">
         ${renderEmptyOrBooks(tsundokuBooks, '積読', false)}
@@ -143,7 +143,7 @@ const pausedBooks =
     <section class="section home-split-section">
       <div>
         <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">
-  💭 気になる本<span class="section-count">（${allWantBooks.length}冊）</span>
+  💭 気になる本<span class="section-count">（${allWantBooks.length}）</span>
 </h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(wantBooks, '気になる本', false)}
@@ -152,7 +152,7 @@ const pausedBooks =
 
       <div>
         <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">
- ⏸ 中断<span class="section-count">（${allPausedBooks.length}冊）</span>
+ ⏸ 中断<span class="section-count">（${allPausedBooks.length}）</span>
 </h2>
         <div class="horizontal-books">
           ${renderEmptyOrBooks(pausedBooks, '中断本', false)}

@@ -2311,35 +2311,4 @@ async function deleteQuoteAndRefresh(bookId, quoteId) {
   }
 }
 
-.edit-quote-section {
-  display: block;
-}
 
-.edit-quote-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 10px;
-}
-
-.edit-quote-item {
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: var(--paper);
-  padding: 12px;
-}
-
-.edit-quote-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.edit-quote-text {
-  color: var(--ink);
-  font-size: 13px;
-  line-height: 1.65;
-  white-space: pre-wrap;
-}

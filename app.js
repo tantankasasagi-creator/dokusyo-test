@@ -35,6 +35,9 @@ async function loadInitialData() {
 
     const data = await response.json();
 
+console.log('OCR data:', data);
+console.log('OCR raw text:', data.text);
+
     state.books = data.books || [];
     state.readings = data.readings || [];
     state.quotes = data.quotes || [];

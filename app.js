@@ -2109,10 +2109,18 @@ function cleanOcrText(text) {
     const lastChar = prevLine.slice(-1);
 
     if (keepChars.includes(lastChar)) {
-      result += '\n' + lines[i];
-    } else {
-      result += lines[i];
-    }
+
+  const firstChar = lines[i].charAt(0);
+
+  if ('「『（【'.includes(firstChar)) {
+    result += '\n' + lines[i];
+  } else {
+    result += '\n　' + lines[i];
+  }
+
+} else {
+  result += lines[i];
+}
   }
 
   return result;

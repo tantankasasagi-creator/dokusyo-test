@@ -410,9 +410,11 @@
   border: 1px solid var(--line);
   background: var(--paper);
   border-radius: 999px;
-  padding: 5px 10px;
+  padding: 6px 11px;
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(70, 45, 25, 0.06);
 }
 
 .edit-row {
@@ -687,21 +689,26 @@
 }
 
 .edit-quote-section {
-  display: block;
+  margin-top: 4px;
+}
+
+.edit-quote-section .edit-sub-section {
+  border-bottom: none;
+  padding: 8px 0 10px;
 }
 
 .edit-quote-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-top: 10px;
+  gap: 12px;
 }
 
 .edit-quote-item {
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 18px;
   background: var(--paper);
-  padding: 12px;
+  padding: 12px 13px;
+  box-shadow: 0 4px 12px rgba(70, 45, 25, 0.06);
 }
 
 .edit-quote-actions {
@@ -712,9 +719,31 @@
   margin-bottom: 8px;
 }
 
+.edit-quote-actions .archive-meta {
+  margin-bottom: 0;
+}
+
+.edit-quote-button-group {
+  display: flex;
+  gap: 6px;
+}
+
 .edit-quote-text {
   color: var(--ink);
   font-size: 13px;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
   line-height: 1.65;
   white-space: pre-wrap;
+}
+
+.secondary-button {
+  border: 1px solid var(--line);
+  background: var(--soft);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 700;
 }

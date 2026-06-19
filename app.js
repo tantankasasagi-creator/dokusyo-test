@@ -2093,12 +2093,35 @@ alert(data.text || 'OCR text is empty');
 }
 
 function cleanOcrText(text) {
-  return String(text || '')
+
+  const keepChars =
+    '。！？」』）】〕＞…―';
+
+  const lines = String(text || '')
     .replace(/\r/g, '')
     .split('\n')
     .map(line => line.trim())
-    .filter(Boolean)
-    .join('');
+    .filter(Boolean);
+
+  if (lines.length <= 1) {
+    return lines.join('');
+  }
+
+  let result = lines[0];
+
+  for (let i = 1; i < lines.length; i++) {
+
+    const prevLine = lines[i - 1];
+    const lastChar = prevLine.slice(-1);
+
+    if (keepChars.includes(lastChar)) {
+      result += '\n' + lines[i];
+    } else {
+      result += lines[i];
+    }
+  }
+
+  return result;
 }
 
 async function resizeImageForOcr(file) {

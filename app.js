@@ -1235,6 +1235,7 @@ function showEditView(bookId, readingId = '') {
   const book = state.books.find(b => b['書籍ID'] === bookId);
   if (!book) return;
 
+    const quotes = state.quotes.filter(q => q['書籍ID'] === bookId);
   const isRereadDraft = readingId === '__REREAD_DRAFT__';
 
   const latestReading = isRereadDraft
@@ -1296,9 +1297,19 @@ function showEditView(bookId, readingId = '') {
 
       <div class="edit-divider"></div>
 
-      <section class="edit-sub-section">
-        <div class="edit-sub-title">引用</div>
-        <button class="mini-button" onclick="showQuoteAddView('${bookId}')">＋追加</button>
+            <section class="edit-quote-section">
+        <div class="edit-sub-section">
+          <div class="edit-sub-title">引用</div>
+          <button class="mini-button" onclick="showQuoteAddView('${bookId}')">＋追加</button>
+        </div>
+
+        <div class="edit-quote-list">
+          ${
+            quotes.length
+              ? quotes.map(q => renderEditQuoteItem(q, bookId)).join('')
+              : '<div class="subtle">引用はまだありません。</div>'
+          }
+        </div>
       </section>
 
       <section class="edit-sub-section">
@@ -2170,3 +2181,133 @@ function loadImageFromFile(file) {
 function shuffleArray(array) {
   return [...array].sort(() => Math.random() - 0.5);
 }
+
+function renderEditQuoteItem(quote, bookId) {
+  const quoteId = quote['引用ID'];
+  const page = quote['ページ'] ? `p.${escapeHtml(quote['ページ'])}` : '';
+  const text = String(quote['引用本文'] || '');
+
+  return `
+    <div class="edit-quote-item">
+      <div class="edit-quote-actions">
+        <span class="archive-meta">${page}</span>
+        <div>
+          <button class="mini-button" onclick="showQuoteEditView('${bookId}', '${quoteId}')">編集</button>
+          <button class="mini-button" onclick="deleteQuoteAndRefresh('${bookId}', '${quoteId}')">削除</button>
+        </div>
+      </div>
+
+      <div class="edit-quote-text">
+        ${escapeHtml(text)}
+      </div>
+    </div>
+  `;
+}
+
+function showQuoteEditView(bookId, quoteId) {
+  const quote = state.quotes.find(q => q['引用ID'] === quoteId);
+  if (!quote) return;
+
+  setChromeVisible(false);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="showEditView('${bookId}')">×</button>
+      <button class="icon-button" onclick="updateQuoteAndClose('${bookId}', '${quoteId}')">保存</button>
+    </div>
+
+    <h1 class="page-title">引用を編集</h1>
+
+    <div class="edit-form">
+      <label class="edit-label" for="quotePageInput">ページ</label>
+      <input
+        id="quotePageInput"
+        class="edit-input"
+        type="text"
+        inputmode="numeric"
+        value="${escapeHtml(quote['ページ'] || '')}"
+      >
+
+      <label class="edit-label" for="quoteTextInput">引用本文</label>
+      <textarea
+        id="quoteTextInput"
+        class="edit-textarea"
+        rows="10"
+      >${escapeHtml(quote['引用本文'] || '')}</textarea>
+    </div>
+  `;
+}
+
+async function updateQuoteAndClose(bookId, quoteId) {
+  const page =
+    document.getElementById('quotePageInput')?.value.trim() || '';
+
+  const text =
+    document.getElementById('quoteTextInput')?.value.trim() || '';
+
+  if (!text) {
+    alert('引用本文を入力してください');
+    return;
+  }
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'updateQuote',
+        quoteId,
+        quoteData: {
+          page,
+          text
+        }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.status !== 'ok') {
+      throw new Error(data.message || '引用の更新に失敗しました');
+    }
+
+    const quote = state.quotes.find(q => q['引用ID'] === quoteId);
+    if (quote) {
+      quote['ページ'] = page;
+      quote['引用本文'] = text;
+    }
+
+    showEditView(bookId);
+
+  } catch (error) {
+    alert(`引用の更新に失敗しました: ${error.message}`);
+  }
+}
+
+async function deleteQuoteAndRefresh(bookId, quoteId) {
+  if (!confirm('この引用を削除しますか？')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'deleteQuote',
+        quoteId
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.status !== 'ok') {
+      throw new Error(data.message || '引用の削除に失敗しました');
+    }
+
+    state.quotes = state.quotes.filter(q => q['引用ID'] !== quoteId);
+
+    showEditView(bookId);
+
+  } catch (error) {
+    alert(`引用の削除に失敗しました: ${error.message}`);
+  }
+}
+

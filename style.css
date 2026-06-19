@@ -797,22 +797,6 @@
   bottom: -13px;
 }
 
-.home-stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 12px;
-  margin-bottom: 18px;
-}
-
-.home-stats span {
-  background: rgba(255, 253, 248, 0.62);
-  border: 1px solid rgba(229, 221, 210, 0.75);
-  border-radius: 999px;
-  padding: 5px 9px;
-}
-
 .home-card-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -902,4 +886,8 @@
   line-height: 1.1;
   text-align: center;
   opacity: 0.75;
+}
+
+.home-stats-line {
+  margin-bottom: 18px;
 }

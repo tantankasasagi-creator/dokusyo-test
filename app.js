@@ -2069,7 +2069,10 @@ formData.append('image', resizedFile);
     });
 
     const data = await response.json();
-    console.log(data);
+
+console.log('OCR data:', data);
+console.log('OCR raw text:', data.text);
+alert(data.text || 'OCR text is empty');
     
     if (!data.success) {
       throw new Error(data.message || 'OCRに失敗しました');

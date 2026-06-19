@@ -859,13 +859,13 @@
 }
 
 .home-mini-book {
-  width: 78px;
-  flex: 0 0 78px;
+  width: 84px;
+  flex: 0 0 84px;
 }
 
 .home-card-grid.single .home-mini-book {
-  width: 82px;
-  flex-basis: 82px;
+  width: 108px;
+  flex-basis: 108px;
 }
 
 .home-mini-cover {
@@ -898,6 +898,8 @@
   margin-top: 4px;
   color: var(--muted);
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.1;
+  text-align: center;
+  opacity: 0.75;
 }

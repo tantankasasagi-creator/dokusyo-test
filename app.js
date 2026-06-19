@@ -65,100 +65,161 @@ function showHomeView() {
   state.currentView = 'home';
   setActiveNav('home');
 
-const allReadingBooks =
-  getBooksByStatus('reading');
+  const allReadingBooks = getBooksByStatus('reading');
+  const allTsundokuBooks = getBooksByStatus('tsundoku');
+  const allWantBooks = getBooksByStatus('want');
+  const allPausedBooks = getBooksByStatus('paused');
 
-const allTsundokuBooks =
-  getBooksByStatus('tsundoku');
-
-const allWantBooks =
-  getBooksByStatus('want');
-
-const allPausedBooks =
-  getBooksByStatus('paused');
-
-const readingBooks =
-  allReadingBooks.slice(0,4);
-
-const tsundokuBooks =
-  shuffleArray(allTsundokuBooks).slice(0,4);
-
-const wantBooks =
-  shuffleArray(allWantBooks).slice(0,3);
-
-const pausedBooks =
-  shuffleArray(allPausedBooks).slice(0,1);
-  const onThisDayBooks = getOnThisDayBooks();
+  const onThisDayItems = getOnThisDayBooks();
   const stats = getReadingStats();
   const todayQuote = getTodayQuoteOrImpression();
-  
+
+  const onThisDayBooks = onThisDayItems
+    .map(item => item.book)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const readingBooks = allReadingBooks.slice(0, 2);
+  const tsundokuBooks = shuffleArray(allTsundokuBooks).slice(0, 4);
+  const wantBooks = shuffleArray(allWantBooks).slice(0, 2);
+  const pausedBooks = shuffleArray(allPausedBooks).slice(0, 2);
+
   document.getElementById('app').innerHTML = `
-    <div class="subtle">
-      今月 ${stats.month}冊　/　今年 ${stats.year}冊　/　累計 ${stats.total}冊　/　${stats.streak}週連続読了中
+    <div class="home-stats">
+      <span>今月 ${stats.month}冊</span>
+      <span>今年 ${stats.year}冊</span>
+      <span>累計 ${stats.total}冊</span>
+      <span>${stats.streak}週連続</span>
     </div>
 
     ${todayQuote ? `
-<section class="section">
-  <h2 class="section-title">📖 今日の一節</h2>
+      <section class="section">
+        <h2 class="section-title">📖 今日の一節</h2>
 
-  <div class="register-box quote-home-card"
-       onclick="showBookDetail('${todayQuote.bookId}')">
+        <div class="register-box quote-home-card"
+             onclick="showBookDetail('${todayQuote.bookId}')">
+          <div class="quote-home-text">
+            「${escapeHtml(todayQuote.text)}」
+          </div>
 
-   <div class="quote-home-text">
-  「${escapeHtml(todayQuote.text)}」
-</div>
-
-<div class="quote-home-book">
-  『${escapeHtml(todayQuote.title)}』
-</div>
-  </div>
-</section>
-` : ''}
-
-    <section class="section">
-      <h2 class="section-title">📅 過去の今日</h2>
-      <div class="horizontal-books">
-        ${renderOnThisDayBooks(onThisDayBooks)}
-      </div>
-    </section>
-
-    <section class="section">
-      <h2 class="section-title" onclick="showStatusBookList('reading', '📖 机の上')">
-  📖 机の上<span class="section-count">（${allReadingBooks.length}）</span>
-</h2>
-      <div class="horizontal-books">
-        ${renderEmptyOrBooks(readingBooks, '読書中の本', false)}
-      </div>
-    </section>
-
-    <section class="section">
-      <h2 class="section-title" onclick="showStatusBookList('tsundoku', '📦 積読')">
-  📦 積読<span class="section-count">（${allTsundokuBooks.length}）</span>
-</h2>
-      <div class="horizontal-books">
-        ${renderEmptyOrBooks(tsundokuBooks, '積読', false)}
-      </div>
-    </section>
-
-    <section class="section home-split-section">
-      <div>
-        <h2 class="section-title" onclick="showStatusBookList('want', '💭 気になる本')">
-  💭 気になる本<span class="section-count">（${allWantBooks.length}）</span>
-</h2>
-        <div class="horizontal-books">
-          ${renderEmptyOrBooks(wantBooks, '気になる本', false)}
+          <div class="quote-home-book">
+            『${escapeHtml(todayQuote.title)}』
+          </div>
         </div>
+      </section>
+    ` : ''}
+
+    <section class="home-card-grid">
+      ${renderHomeBookGroupCard({
+        title: '📅 過去の今日',
+        count: onThisDayItems.length,
+        books: onThisDayBooks,
+        emptyLabel: '過去の今日なし',
+        onCardClick: 'showOnThisDayList()'
+      })}
+
+      ${renderHomeBookGroupCard({
+        title: '📖 机の上',
+        count: allReadingBooks.length,
+        books: readingBooks,
+        emptyLabel: '読書中なし',
+        onCardClick: "showStatusBookList('reading', '📖 机の上')"
+      })}
+    </section>
+
+    <section class="home-card-grid single">
+      ${renderHomeBookGroupCard({
+        title: '📦 積読',
+        count: allTsundokuBooks.length,
+        books: tsundokuBooks,
+        emptyLabel: '積読なし',
+        onCardClick: "showStatusBookList('tsundoku', '📦 積読')"
+      })}
+    </section>
+
+    <section class="home-card-grid">
+      ${renderHomeBookGroupCard({
+        title: '💭 気になる本',
+        count: allWantBooks.length,
+        books: wantBooks,
+        emptyLabel: '気になる本なし',
+        onCardClick: "showStatusBookList('want', '💭 気になる本')"
+      })}
+
+      ${renderHomeBookGroupCard({
+        title: '⏸ 中断',
+        count: allPausedBooks.length,
+        books: pausedBooks,
+        emptyLabel: '中断なし',
+        onCardClick: "showStatusBookList('paused', '⏸ 中断')"
+      })}
+    </section>
+  `;
+}
+
+function renderHomeBookGroupCard({
+  title,
+  count,
+  books,
+  emptyLabel,
+  onCardClick
+}) {
+  return `
+    <div class="home-book-group-card" onclick="${onCardClick}">
+      <div class="home-book-group-header">
+        <div class="home-book-group-title">${escapeHtml(title)}</div>
+        <div class="home-book-group-count">(${count})</div>
       </div>
 
-      <div>
-        <h2 class="section-title" onclick="showStatusBookList('paused', '⏸ 中断')">
- ⏸ 中断<span class="section-count">（${allPausedBooks.length}）</span>
-</h2>
-        <div class="horizontal-books">
-          ${renderEmptyOrBooks(pausedBooks, '中断本', false)}
-        </div>
+      <div class="home-book-group-books">
+        ${
+          books.length
+            ? books.map(book => renderHomeMiniBook(book)).join('')
+            : `<div class="home-book-group-empty">${escapeHtml(emptyLabel)}</div>`
+        }
       </div>
-    </section>
+    </div>
+  `;
+}
+
+function renderHomeMiniBook(book) {
+  return `
+    <div class="home-mini-book" onclick="event.stopPropagation(); showBookDetail('${escapeHtml(book['書籍ID'])}')">
+      <div class="home-mini-cover">
+        ${renderCover(book)}
+      </div>
+      <div class="home-mini-title">${escapeHtml(book['タイトル'] || '')}</div>
+    </div>
+  `;
+}
+
+function showOnThisDayList() {
+  const items = getOnThisDayBooks();
+  const books = items.map(item => item.book).filter(Boolean);
+
+  setChromeVisible(true);
+  state.currentView = 'home';
+  setActiveNav('home');
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="showHomeView()">←</button>
+      <div></div>
+    </div>
+
+    <h1 class="page-title">📅 過去の今日</h1>
+
+    <div class="subtle" style="margin-bottom:12px;">
+      ${books.length}冊
+    </div>
+
+    <div class="book-grid">
+      ${
+        books.length
+          ? books.map(book => renderBookCard(book)).join('')
+          : '<div class="empty-message">過去の今日に読んでいた本はありません。</div>'
+      }
+    </div>
   `;
 }
 

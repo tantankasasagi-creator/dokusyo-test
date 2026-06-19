@@ -2191,7 +2191,7 @@ function renderEditQuoteItem(quote, bookId) {
     <div class="edit-quote-item">
       <div class="edit-quote-actions">
         <span class="archive-meta">${page}</span>
-        <div>
+        <div class="edit-quote-button-group">
           <button class="mini-button" onclick="showQuoteEditView('${bookId}', '${quoteId}')">編集</button>
           <button class="mini-button" onclick="deleteQuoteAndRefresh('${bookId}', '${quoteId}')">削除</button>
         </div>

@@ -1293,7 +1293,7 @@ function showEditView(bookId, readingId = '') {
       ${renderRatingField(latestReading['評価'])}
 
       <label class="edit-label" for="editImpression">感想</label>
-      <textarea id="editImpression" class="edit-textarea" rows="6">${escapeHtml(latestReading['感想'] || '')}</textarea>
+      <textarea id="editImpression" class="edit-textarea" rows="${latestReading['感想'] ? 6 : 2}">${escapeHtml(latestReading['感想'] || '')}</textarea>
 
       <div class="edit-divider"></div>
 

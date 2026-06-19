@@ -2070,9 +2070,7 @@ formData.append('image', resizedFile);
 
     const data = await response.json();
 
-console.log('OCR data:', data);
-console.log('OCR raw text:', data.text);
-alert(data.text || 'OCR text is empty');
+
     
     if (!data.success) {
       throw new Error(data.message || 'OCRに失敗しました');
@@ -2096,7 +2094,7 @@ function cleanOcrText(text) {
     .split('\n')
     .map(line => line.trim())
     .filter(Boolean)
-    .join('\n');
+    .join('');
 }
 
 async function resizeImageForOcr(file) {

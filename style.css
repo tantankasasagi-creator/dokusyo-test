@@ -852,19 +852,20 @@
 
 .home-book-group-books {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   padding-bottom: 2px;
+  justify-content: center;
 }
 
 .home-mini-book {
-  width: 64px;
-  flex: 0 0 64px;
+  width: 78px;
+  flex: 0 0 78px;
 }
 
 .home-card-grid.single .home-mini-book {
-  width: 72px;
-  flex-basis: 72px;
+  width: 82px;
+  flex-basis: 82px;
 }
 
 .home-mini-cover {

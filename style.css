@@ -891,3 +891,12 @@
 .home-stats-line {
   margin-bottom: 18px;
 }
+
+.home-app-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+

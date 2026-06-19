@@ -2280,6 +2280,7 @@ async function deleteQuoteAndRefresh(bookId, quoteId) {
   } catch (error) {
     alert(`引用の削除に失敗しました: ${error.message}`);
   }
+  }
 
   let ocrCropState = null;
 
@@ -2485,6 +2486,6 @@ async function createCroppedOcrFile() {
     type: 'image/jpeg'
   });
 }
-}
+
 
 

@@ -37,6 +37,7 @@ async function loadInitialData() {
 
 console.log('OCR data:', data);
 console.log('OCR raw text:', data.text);
+alert(data.text || 'OCR text is empty');
 
     state.books = data.books || [];
     state.readings = data.readings || [];

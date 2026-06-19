@@ -1952,7 +1952,7 @@ function showQuoteAddView(bookId) {
     accept="image/*"
     capture="environment"
     style="display:none"
-    onchange="handleQuoteImage(event)"
+    onchange="handleQuoteImage(event, '${bookId}')"
   >
 </div>
 
@@ -2059,42 +2059,13 @@ function selectQuoteImage() {
   document.getElementById('quoteImageInput')?.click();
 }
 
-async function handleQuoteImage(event) {
+async function handleQuoteImage(event, bookId) {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  const textarea = document.getElementById('quoteTextInput');
-  if (!textarea) return;
+  showOcrCropView(file, bookId);
 
-  textarea.value = 'OCR読み取り中...';
-
-  try {
-    const resizedFile = await resizeImageForOcr(file);
-
-const formData = new FormData();
-formData.append('image', resizedFile);
-    
-    const response = await fetch(OCR_WORKER_URL, {
-      method: 'POST',
-      body: formData
-    });
-
-    const data = await response.json();
-
-    if (!data.success) {
-      throw new Error(data.message || 'OCRに失敗しました');
-    }
-
-    const text = cleanOcrText(data.text || '');
-
-    textarea.value = text;
-
-  } catch (error) {
-    textarea.value = '';
-    alert(`OCRに失敗しました: ${error.message}`);
-  } finally {
-    event.target.value = '';
-  }
+  event.target.value = '';
 }
 
 function cleanOcrText(text) {
@@ -2309,6 +2280,211 @@ async function deleteQuoteAndRefresh(bookId, quoteId) {
   } catch (error) {
     alert(`引用の削除に失敗しました: ${error.message}`);
   }
+
+  let ocrCropState = null;
+
+async function showOcrCropView(file, bookId) {
+  const imageUrl = URL.createObjectURL(file);
+
+  ocrCropState = {
+    file,
+    bookId,
+    imageUrl,
+    crop: {
+      x: 12,
+      y: 18,
+      w: 76,
+      h: 48
+    },
+    dragging: null
+  };
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="cancelOcrCrop()">×</button>
+      <button class="icon-button" onclick="runOcrFromCrop()">読取</button>
+    </div>
+
+    <h1 class="page-title">読み取る範囲を選ぶ</h1>
+
+    <div class="ocr-crop-help">
+      四隅を動かして、引用したい範囲を囲んでください。
+    </div>
+
+    <div id="ocrCropArea" class="ocr-crop-area">
+      <img id="ocrCropImage" class="ocr-crop-image" src="${imageUrl}">
+      <div id="ocrCropFrame" class="ocr-crop-frame">
+        <div class="ocr-crop-handle tl" onpointerdown="startCropResize(event, 'tl')"></div>
+        <div class="ocr-crop-handle tr" onpointerdown="startCropResize(event, 'tr')"></div>
+        <div class="ocr-crop-handle bl" onpointerdown="startCropResize(event, 'bl')"></div>
+        <div class="ocr-crop-handle br" onpointerdown="startCropResize(event, 'br')"></div>
+      </div>
+    </div>
+  `;
+
+  updateCropFrame();
+}
+
+function updateCropFrame() {
+  const frame = document.getElementById('ocrCropFrame');
+  if (!frame || !ocrCropState) return;
+
+  const crop = ocrCropState.crop;
+
+  frame.style.left = `${crop.x}%`;
+  frame.style.top = `${crop.y}%`;
+  frame.style.width = `${crop.w}%`;
+  frame.style.height = `${crop.h}%`;
+}
+
+function startCropResize(event, corner) {
+  event.preventDefault();
+  event.stopPropagation();
+
+  if (!ocrCropState) return;
+
+  ocrCropState.dragging = corner;
+
+  document.addEventListener('pointermove', moveCropResize);
+  document.addEventListener('pointerup', endCropResize);
+}
+
+function moveCropResize(event) {
+  if (!ocrCropState?.dragging) return;
+
+  const area = document.getElementById('ocrCropArea');
+  if (!area) return;
+
+  const rect = area.getBoundingClientRect();
+  const px = ((event.clientX - rect.left) / rect.width) * 100;
+  const py = ((event.clientY - rect.top) / rect.height) * 100;
+
+  const crop = ocrCropState.crop;
+  const minSize = 12;
+
+  if (ocrCropState.dragging.includes('l')) {
+    const right = crop.x + crop.w;
+    crop.x = Math.max(0, Math.min(px, right - minSize));
+    crop.w = right - crop.x;
+  }
+
+  if (ocrCropState.dragging.includes('r')) {
+    crop.w = Math.max(minSize, Math.min(100 - crop.x, px - crop.x));
+  }
+
+  if (ocrCropState.dragging.includes('t')) {
+    const bottom = crop.y + crop.h;
+    crop.y = Math.max(0, Math.min(py, bottom - minSize));
+    crop.h = bottom - crop.y;
+  }
+
+  if (ocrCropState.dragging.includes('b')) {
+    crop.h = Math.max(minSize, Math.min(100 - crop.y, py - crop.y));
+  }
+
+  updateCropFrame();
+}
+
+function endCropResize() {
+  if (!ocrCropState) return;
+
+  ocrCropState.dragging = null;
+
+  document.removeEventListener('pointermove', moveCropResize);
+  document.removeEventListener('pointerup', endCropResize);
+}
+
+function cancelOcrCrop() {
+  const bookId = ocrCropState?.bookId || '';
+
+  if (ocrCropState?.imageUrl) {
+    URL.revokeObjectURL(ocrCropState.imageUrl);
+  }
+
+  ocrCropState = null;
+  showQuoteAddView(bookId);
+}
+
+async function runOcrFromCrop() {
+  if (!ocrCropState) return;
+
+  const bookId = ocrCropState.bookId;
+  const croppedFile = await createCroppedOcrFile();
+
+  if (ocrCropState.imageUrl) {
+    URL.revokeObjectURL(ocrCropState.imageUrl);
+  }
+
+  ocrCropState = null;
+
+  showQuoteAddView(bookId);
+
+  setTimeout(async () => {
+    const textarea = document.getElementById('quoteTextInput');
+    if (!textarea) return;
+
+    textarea.value = 'OCR読み取り中...';
+
+    try {
+      const resizedFile = await resizeImageForOcr(croppedFile);
+
+      const formData = new FormData();
+      formData.append('image', resizedFile);
+
+      const response = await fetch(OCR_WORKER_URL, {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'OCRに失敗しました');
+      }
+
+      textarea.value = cleanOcrText(data.text || '');
+
+    } catch (error) {
+      textarea.value = '';
+      alert(`OCRに失敗しました: ${error.message}`);
+    }
+  }, 0);
+}
+
+async function createCroppedOcrFile() {
+  const img = document.getElementById('ocrCropImage');
+  const frame = document.getElementById('ocrCropFrame');
+
+  if (!img || !frame) {
+    throw new Error('切り抜き範囲を取得できません');
+  }
+
+  const imgRect = img.getBoundingClientRect();
+  const frameRect = frame.getBoundingClientRect();
+
+  const scaleX = img.naturalWidth / imgRect.width;
+  const scaleY = img.naturalHeight / imgRect.height;
+
+  const sx = Math.max(0, (frameRect.left - imgRect.left) * scaleX);
+  const sy = Math.max(0, (frameRect.top - imgRect.top) * scaleY);
+  const sw = Math.min(img.naturalWidth - sx, frameRect.width * scaleX);
+  const sh = Math.min(img.naturalHeight - sy, frameRect.height * scaleY);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(sw);
+  canvas.height = Math.round(sh);
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+  const blob = await new Promise(resolve => {
+    canvas.toBlob(resolve, 'image/jpeg', 0.9);
+  });
+
+  return new File([blob], 'quote-crop.jpg', {
+    type: 'image/jpeg'
+  });
+}
 }
 
 

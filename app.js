@@ -74,10 +74,7 @@ function showHomeView() {
   const stats = getReadingStats();
   const todayQuote = getTodayQuoteOrImpression();
 
-  const onThisDayBooks = onThisDayItems
-    .map(item => item.book)
-    .filter(Boolean)
-    .slice(0, 2);
+  const onThisDayDisplayItems = onThisDayItems.slice(0, 2);
 
   const readingBooks = allReadingBooks.slice(0, 2);
   const tsundokuBooks = shuffleArray(allTsundokuBooks).slice(0, 4);
@@ -113,7 +110,7 @@ function showHomeView() {
       ${renderHomeBookGroupCard({
         title: '📅 過去の今日',
         count: onThisDayItems.length,
-        books: onThisDayBooks,
+        items: onThisDayDisplayItems,
         emptyLabel: '過去の今日なし',
         onCardClick: 'showOnThisDayList()'
       })}
@@ -160,10 +157,15 @@ function showHomeView() {
 function renderHomeBookGroupCard({
   title,
   count,
-  books,
+  books = [],
+  items = null,
   emptyLabel,
   onCardClick
 }) {
+  const displayHtml = items
+    ? items.map(item => renderHomeMiniBook(item.book, item.year)).join('')
+    : books.map(book => renderHomeMiniBook(book)).join('');
+
   return `
     <div class="home-book-group-card" onclick="${onCardClick}">
       <div class="home-book-group-header">
@@ -173,8 +175,8 @@ function renderHomeBookGroupCard({
 
       <div class="home-book-group-books">
         ${
-          books.length
-            ? books.map(book => renderHomeMiniBook(book)).join('')
+          displayHtml
+            ? displayHtml
             : `<div class="home-book-group-empty">${escapeHtml(emptyLabel)}</div>`
         }
       </div>
@@ -182,12 +184,19 @@ function renderHomeBookGroupCard({
   `;
 }
 
-function renderHomeMiniBook(book) {
+function renderHomeMiniBook(book, year = '') {
   return `
     <div class="home-mini-book" onclick="event.stopPropagation(); showBookDetail('${escapeHtml(book['書籍ID'])}')">
       <div class="home-mini-cover">
         ${renderCover(book)}
       </div>
+
+      ${
+        year
+          ? `<div class="home-mini-year">${escapeHtml(year)}</div>`
+          : ''
+      }
+
       <div class="home-mini-title">${escapeHtml(book['タイトル'] || '')}</div>
     </div>
   `;

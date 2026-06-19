@@ -859,13 +859,13 @@
 }
 
 .home-mini-book {
-  width: 84px;
-  flex: 0 0 84px;
+  width: 96px;
+  flex: 0 0 96px;
 }
 
 .home-card-grid.single .home-mini-book {
-  width: 108px;
-  flex-basis: 108px;
+  width: 96px;
+  flex-basis: 96px;
 }
 
 .home-mini-cover {

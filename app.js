@@ -82,12 +82,9 @@ function showHomeView() {
   const pausedBooks = shuffleArray(allPausedBooks).slice(0, 2);
 
   document.getElementById('app').innerHTML = `
-    <div class="home-stats">
-      <span>今月 ${stats.month}冊</span>
-      <span>今年 ${stats.year}冊</span>
-      <span>累計 ${stats.total}冊</span>
-      <span>${stats.streak}週連続</span>
-    </div>
+    <div class="subtle home-stats-line">
+  今月 ${stats.month}冊　/　今年 ${stats.year}冊　/　累計 ${stats.total}冊　/　${stats.streak}週連続読了中
+</div>
 
     ${todayQuote ? `
       <section class="section">

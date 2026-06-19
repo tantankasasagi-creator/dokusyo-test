@@ -894,3 +894,10 @@
   align-items: center;
 }
 
+.home-mini-year {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.1;
+}

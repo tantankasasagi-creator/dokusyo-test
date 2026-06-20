@@ -2514,7 +2514,11 @@ async function runOcrFromCrop() {
     const textarea = document.getElementById('quoteTextInput');
     if (!textarea) return;
 
-    textarea.value = 'OCR読み取り中...';
+        const currentText = textarea.value.trim();
+
+    textarea.value = currentText
+      ? `${currentText}\n\nOCR読み取り中...`
+      : 'OCR読み取り中...';
 
     try {
       const resizedFile = await resizeImageForOcr(croppedFile);
@@ -2533,7 +2537,11 @@ async function runOcrFromCrop() {
         throw new Error(data.message || 'OCRに失敗しました');
       }
 
-      textarea.value = cleanOcrText(data.text || '');
+            const newText = cleanOcrText(data.text || '');
+
+      textarea.value = currentText
+        ? `${currentText}\n\n${newText}`
+        : newText;
 
     } catch (error) {
       textarea.value = '';

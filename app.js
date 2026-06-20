@@ -2103,23 +2103,30 @@ async function saveQuoteAndClose(bookId) {
 
 function getTodayQuoteOrImpression() {
 
-  const quoteCandidates = state.quotes
-    .filter(q => q['引用本文']);
+ const quoteCandidates =
+  state.quotes.filter(q => q['引用本文']);
 
-  if (quoteCandidates.length > 0) {
+const impressionCandidates =
+  state.readings.filter(r => r['感想']);
 
-    const quote =
-      quoteCandidates[Math.floor(Math.random() * quoteCandidates.length)];
+const useQuote =
+  quoteCandidates.length > 0 &&
+  Math.random() < 0.8;
+  
+if (useQuote) {
 
-    const book =
-      state.books.find(b => b['書籍ID'] === quote['書籍ID']);
+  const quote =
+    quoteCandidates[Math.floor(Math.random() * quoteCandidates.length)];
 
-    return {
-      bookId: quote['書籍ID'],
-      title: book?.['タイトル'] || '',
-      text: quote['引用本文']
-    };
-  }
+  const book =
+    state.books.find(b => b['書籍ID'] === quote['書籍ID']);
+
+  return {
+    bookId: quote['書籍ID'],
+    title: book?.['タイトル'] || '',
+    text: quote['引用本文']
+  };
+}
 
   const impressionCandidates = state.readings
     .filter(r => r['感想']);

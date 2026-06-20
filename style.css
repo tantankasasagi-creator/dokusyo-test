@@ -848,7 +848,7 @@
 }
 
 .home-card-grid:not(.single) .home-book-group-books {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .home-card-grid.single .home-book-group-books {

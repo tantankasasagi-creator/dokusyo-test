@@ -149,12 +149,12 @@ function renderTodayQuoteCard(todayQuote) {
     <div class="home-book-group-card quote-home-card"
          onclick="showBookDetail('${todayQuote.bookId}')">
 
-      <div class="home-book-group-header">
-        <div class="home-book-group-title">📖 今日の一節</div>
-      </div>
-
       <div class="quote-home-layout">
         <div class="quote-home-main">
+          <div class="home-book-group-header">
+            <div class="home-book-group-title">📖 今日の一節</div>
+          </div>
+
           <div class="quote-home-text">
             「${escapeHtml(todayQuote.text)}」
           </div>

@@ -861,8 +861,8 @@
 }
 
 .home-card-grid.single .home-mini-book {
-  width: min(116px, 24%);
-  flex-basis: min(116px, 24%);
+  width: min(116px, 22%);
+  flex-basis: min(116px, 22%);
 }
 
 .home-mini-cover {

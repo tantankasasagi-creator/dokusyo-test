@@ -12,7 +12,12 @@
 
     <main id="app"></main>
 
-    <button class="fab-button" onclick="showRegisterView()">＋</button>
+    <div class="fab-menu hidden" id="fabMenu">
+  <button class="fab-menu-item" onclick="showRegisterView(); closeFabMenu();">📚 本を追加</button>
+  <button class="fab-menu-item" onclick="showQuoteAddView(''); closeFabMenu();">✍️ 引用を追加</button>
+</div>
+
+<button class="fab-button" onclick="toggleFabMenu()">＋</button>
 
     <nav class="bottom-nav">
       <button class="nav-button active" data-view="home" onclick="showHomeView()">ホーム</button>

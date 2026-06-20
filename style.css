@@ -906,9 +906,9 @@
 
 .quote-home-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 82px;
+  grid-template-columns: minmax(0, 1fr) 98px;
   gap: 14px;
-  align-items: center;
+  align-items: start;
 }
 
 .quote-home-main {
@@ -922,7 +922,7 @@
 
 .quote-home-cover {
   position: relative;
-  width: 64px;
+  width: 78px;
   margin: 0 auto;
   aspect-ratio: 0.68;
   border-radius: 7px;

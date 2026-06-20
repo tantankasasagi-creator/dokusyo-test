@@ -19,6 +19,12 @@ const bookshelfCondition = {
   publishers: []
 };
 
+const quoteDraft = {
+  bookId: '',
+  page: '',
+  text: ''
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   loadInitialData();
 });
@@ -2012,18 +2018,45 @@ function renderQuoteBlock(quote) {
   `;
 }
 
-function showQuoteAddView(bookId) {
+function showQuoteAddView(bookId = '') {
   setChromeVisible(false);
+
+  if (bookId) {
+    quoteDraft.bookId = bookId;
+  }
+
+  const selectedBook = state.books.find(b => b['書籍ID'] === quoteDraft.bookId);
 
   document.getElementById('app').innerHTML = `
     <div class="detail-header">
-      <button class="icon-button" onclick="showBookDetail('${bookId}')">×</button>
-      <button class="icon-button" onclick="saveQuoteAndClose('${bookId}')">保存</button>
+      <button class="icon-button" onclick="${quoteDraft.bookId ? `showBookDetail('${quoteDraft.bookId}')` : 'showHomeView()'}">×</button>
+      <button class="icon-button" onclick="saveQuoteAndClose('${quoteDraft.bookId}')">保存</button>
     </div>
 
     <h1 class="page-title">引用を追加</h1>
 
     <div class="edit-form">
+      <label class="edit-label">本</label>
+      <button type="button" class="quote-book-select-card" onclick="openQuoteBookSelectView()">
+        ${
+          selectedBook
+            ? `
+              <div class="quote-book-select-cover">${renderCover(selectedBook)}</div>
+              <div>
+                <div class="quote-book-select-title">${escapeHtml(selectedBook['タイトル'] || '')}</div>
+                <div class="quote-book-select-subtitle">${escapeHtml(formatBookMetaLine(selectedBook))}</div>
+              </div>
+            `
+            : `
+              <div class="quote-book-select-icon">📚</div>
+              <div>
+                <div class="quote-book-select-title">本を選ぶ</div>
+                <div class="quote-book-select-subtitle">引用を紐づける本を選択</div>
+              </div>
+            `
+        }
+      </button>
+
       <label class="edit-label" for="quoteTextInput">引用本文</label>
 
       <div class="quote-ocr-card" onclick="selectQuoteImage()">
@@ -2040,7 +2073,7 @@ function showQuoteAddView(bookId) {
         accept="image/*"
         capture="environment"
         style="display:none"
-        onchange="handleQuoteImage(event, '${bookId}')"
+        onchange="handleQuoteImage(event, '${quoteDraft.bookId}')"
       >
 
       <textarea
@@ -2048,7 +2081,8 @@ function showQuoteAddView(bookId) {
         class="edit-textarea"
         rows="10"
         placeholder="引用を入力"
-      ></textarea>
+        oninput="quoteDraft.text = this.value"
+      >${escapeHtml(quoteDraft.text || '')}</textarea>
 
       <label class="edit-label" for="quotePageInput">ページ</label>
       <input
@@ -2057,12 +2091,110 @@ function showQuoteAddView(bookId) {
         type="text"
         inputmode="numeric"
         placeholder="例：32"
+        value="${escapeHtml(quoteDraft.page || '')}"
+        oninput="quoteDraft.page = this.value"
       >
     </div>
   `;
 }
 
+function openQuoteBookSelectView() {
+  quoteDraft.text =
+    document.getElementById('quoteTextInput')?.value || quoteDraft.text || '';
+
+  quoteDraft.page =
+    document.getElementById('quotePageInput')?.value || quoteDraft.page || '';
+
+  showQuoteBookSelectView();
+}
+
+function showQuoteBookSelectView() {
+  setChromeVisible(false);
+
+  const books = [...state.books]
+    .sort((a, b) => getTouchDate(b) - getTouchDate(a))
+    .slice(0, 40);
+
+  document.getElementById('app').innerHTML = `
+    <div class="detail-header">
+      <button class="icon-button" onclick="showQuoteAddView()">←</button>
+      <div></div>
+    </div>
+
+    <h1 class="page-title">本を選ぶ</h1>
+
+    <div class="register-box">
+      <input
+        id="quoteBookSearchInput"
+        class="text-input"
+        type="text"
+        placeholder="タイトル・著者で検索"
+        oninput="renderQuoteBookSelectList()"
+      >
+
+      <div id="quoteBookSelectList" class="quote-book-select-list">
+        ${renderQuoteBookSelectItems(books)}
+      </div>
+    </div>
+  `;
+}
+
+function renderQuoteBookSelectList() {
+  const keyword =
+    document.getElementById('quoteBookSearchInput')?.value.trim() || '';
+
+  const normalizedKeyword = normalizeSearchText(keyword);
+
+  const books = [...state.books]
+    .filter(book => {
+      if (!normalizedKeyword) return true;
+
+      const target = [
+        book['タイトル'],
+        book['著者'],
+        book['出版社']
+      ].map(normalizeSearchText).join(' ');
+
+      return target.includes(normalizedKeyword);
+    })
+    .sort((a, b) => getTouchDate(b) - getTouchDate(a))
+    .slice(0, 50);
+
+  document.getElementById('quoteBookSelectList').innerHTML =
+    renderQuoteBookSelectItems(books);
+}
+
+function renderQuoteBookSelectItems(books) {
+  if (!books.length) {
+    return '<div class="empty-message">該当する本はありません。</div>';
+  }
+
+  return books.map(book => `
+    <button
+      type="button"
+      class="quote-book-select-item"
+      onclick="selectQuoteBook('${escapeHtml(book['書籍ID'])}')"
+    >
+      <div class="quote-book-select-cover">${renderCover(book)}</div>
+      <div>
+        <div class="quote-book-select-title">${escapeHtml(book['タイトル'] || '')}</div>
+        <div class="quote-book-select-subtitle">${escapeHtml(formatBookMetaLine(book))}</div>
+      </div>
+    </button>
+  `).join('');
+}
+
+function selectQuoteBook(bookId) {
+  quoteDraft.bookId = bookId;
+  showQuoteAddView(bookId);
+}
+
 async function saveQuoteAndClose(bookId) {
+  if (!bookId) {
+    alert('本を選んでください');
+    return;
+  }
+  
   const page =
     document.getElementById('quotePageInput')?.value.trim() || '';
 
@@ -2101,6 +2233,10 @@ async function saveQuoteAndClose(bookId) {
       '作成日時': today
     });
 
+        quoteDraft.bookId = '';
+    quoteDraft.page = '';
+    quoteDraft.text = '';
+    
     showBookDetail(bookId);
 
   } catch (error) {

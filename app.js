@@ -58,6 +58,15 @@ function setActiveNav(viewName) {
 function setChromeVisible(visible) {
   document.querySelector('.bottom-nav')?.classList.toggle('hidden', !visible);
   document.querySelector('.fab-button')?.classList.toggle('hidden', !visible);
+  document.querySelector('.fab-menu')?.classList.add('hidden');
+}
+
+function toggleFabMenu() {
+  document.getElementById('fabMenu')?.classList.toggle('hidden');
+}
+
+function closeFabMenu() {
+  document.getElementById('fabMenu')?.classList.add('hidden');
 }
 
 function showHomeView() {

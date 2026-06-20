@@ -2015,6 +2015,32 @@ function showQuoteAddView(bookId) {
     <h1 class="page-title">引用を追加</h1>
 
     <div class="edit-form">
+      <label class="edit-label" for="quoteTextInput">引用本文</label>
+
+      <div class="quote-ocr-card" onclick="selectQuoteImage()">
+        <div class="quote-ocr-icon">📷</div>
+        <div>
+          <div class="quote-ocr-title">画像から読み取り</div>
+          <div class="quote-ocr-subtitle">本のページを撮影してOCRします</div>
+        </div>
+      </div>
+
+      <input
+        id="quoteImageInput"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style="display:none"
+        onchange="handleQuoteImage(event, '${bookId}')"
+      >
+
+      <textarea
+        id="quoteTextInput"
+        class="edit-textarea"
+        rows="10"
+        placeholder="引用を入力"
+      ></textarea>
+
       <label class="edit-label" for="quotePageInput">ページ</label>
       <input
         id="quotePageInput"
@@ -2023,34 +2049,6 @@ function showQuoteAddView(bookId) {
         inputmode="numeric"
         placeholder="例：32"
       >
-      
-      <label class="edit-label" for="quoteTextInput">引用本文</label>
-      
-      <div style="margin-bottom:12px;">
-  <button
-    type="button"
-    class="secondary-button"
-    onclick="selectQuoteImage()"
-  >
-    📷 画像から読み取り
-  </button>
-
-  <input
-    id="quoteImageInput"
-    type="file"
-    accept="image/*"
-    capture="environment"
-    style="display:none"
-    onchange="handleQuoteImage(event, '${bookId}')"
-  >
-</div>
-
-      <textarea
-        id="quoteTextInput"
-        class="edit-textarea"
-        rows="10"
-        placeholder="引用を入力"
-      ></textarea>
     </div>
   `;
 }

@@ -657,10 +657,10 @@
 
 .quote-home-text{
   font-size:14px;
-  line-height:1.7;
+  line-height:1.45;
 
   display:-webkit-box;
-  -webkit-line-clamp:4;
+  -webkit-line-clamp:5;
   -webkit-box-orient:vertical;
   overflow:hidden;
 }

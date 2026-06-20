@@ -1002,3 +1002,61 @@
   color: var(--muted);
   font-size: 12px;
 }
+
+.quote-book-select-card,
+.quote-book-select-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 46px 1fr;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 12px;
+  text-align: left;
+}
+
+.quote-book-select-card {
+  box-shadow: 0 4px 12px rgba(70, 45, 25, 0.05);
+}
+
+.quote-book-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.quote-book-select-cover {
+  position: relative;
+  width: 42px;
+  aspect-ratio: 0.68;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #e4d6c7;
+}
+
+.quote-book-select-icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--soft);
+  font-size: 20px;
+}
+
+.quote-book-select-title {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.quote-book-select-subtitle {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.35;
+}

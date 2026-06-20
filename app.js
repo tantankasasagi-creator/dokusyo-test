@@ -74,12 +74,12 @@ function showHomeView() {
   const stats = getReadingStats();
   const todayQuote = getTodayQuoteOrImpression();
 
-  const onThisDayDisplayItems = onThisDayItems.slice(0, 2);
+  const onThisDayDisplayItems = onThisDayItems;
 
-  const readingBooks = allReadingBooks.slice(0, 2);
-  const tsundokuBooks = shuffleArray(allTsundokuBooks).slice(0, 4);
-  const wantBooks = shuffleArray(allWantBooks).slice(0, 2);
-  const pausedBooks = shuffleArray(allPausedBooks).slice(0, 2);
+   const readingBooks = allReadingBooks;
+  const tsundokuBooks = shuffleArray(allTsundokuBooks);
+  const wantBooks = shuffleArray(allWantBooks);
+  const pausedBooks = shuffleArray(allPausedBooks);
 
   document.getElementById('app').innerHTML = `
   <div class="home-app-title">dokusyo</div>

@@ -89,21 +89,10 @@ function showHomeView() {
   </div>
 
     ${todayQuote ? `
-      <section class="section">
-        <h2 class="section-title">📖 今日の一節</h2>
-
-        <div class="register-box quote-home-card"
-             onclick="showBookDetail('${todayQuote.bookId}')">
-          <div class="quote-home-text">
-            「${escapeHtml(todayQuote.text)}」
-          </div>
-
-          <div class="quote-home-book">
-            『${escapeHtml(todayQuote.title)}』
-          </div>
-        </div>
-      </section>
-    ` : ''}
+  <section class="home-card-grid single">
+    ${renderTodayQuoteCard(todayQuote)}
+  </section>
+` : ''}
 
     <section class="home-card-grid">
       ${renderHomeBookGroupCard({
@@ -150,6 +139,37 @@ function showHomeView() {
         onCardClick: "showStatusBookList('paused', '⏸ 中断')"
       })}
     </section>
+  `;
+}
+
+function renderTodayQuoteCard(todayQuote) {
+  const book = state.books.find(b => b['書籍ID'] === todayQuote.bookId);
+
+  return `
+    <div class="home-book-group-card quote-home-card"
+         onclick="showBookDetail('${todayQuote.bookId}')">
+
+      <div class="home-book-group-header">
+        <div class="home-book-group-title">📖 今日の一節</div>
+      </div>
+
+      <div class="quote-home-layout">
+        <div class="quote-home-main">
+          <div class="quote-home-text">
+            「${escapeHtml(todayQuote.text)}」
+          </div>
+        </div>
+
+        <div class="quote-home-side">
+          <div class="quote-home-cover">
+            ${book ? renderCover(book) : ''}
+          </div>
+          <div class="quote-home-side-title">
+            ${escapeHtml(todayQuote.title || '')}
+          </div>
+        </div>
+      </div>
+    </div>
   `;
 }
 

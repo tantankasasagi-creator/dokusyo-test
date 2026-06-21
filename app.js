@@ -2018,6 +2018,14 @@ function renderQuoteBlock(quote) {
   `;
 }
 
+function showNewQuoteAddView() {
+  quoteDraft.bookId = '';
+  quoteDraft.page = '';
+  quoteDraft.text = '';
+
+  showQuoteAddView('');
+}
+
 function showQuoteAddView(bookId = '') {
   setChromeVisible(false);
 

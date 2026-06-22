@@ -1531,13 +1531,15 @@ async function saveBookData(bookId) {
 
   const afterSaveJson = performance.now();
 
-  console.log('[保存速度 計測 after統合]', {
+  console.log('[保存速度 計測 after統合２]', {
     統合通信Ms: Math.round(afterSaveFetch - beforeSaveFetch),
     jsonMs: Math.round(afterSaveJson - afterSaveFetch),
     gasTiming: data?.result?.timing || null,
     updateBookGasTiming: data?.result?.book?.timing || null,
+    updateLatestReadingGasTiming: data?.result?.reading?.timing || null,
     合計Ms: Math.round(afterSaveJson - totalStart),
     bookId: bookId
+    
   });
 
   return {

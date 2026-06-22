@@ -1369,7 +1369,7 @@ function showEditView(bookId, readingId = '') {
     <div class="edit-form">
       ${renderEditField('タイトル', 'editTitle', book['タイトル'])}
       ${renderChipInputField('著者', 'editAuthor', book['著者'], false, 'authors')}
-      ${renderEditField('出版社', 'editPublisher', book['出版社'])}
+      ${renderChipInputField('出版社', 'editPublisher', book['出版社'], false, 'publishers')}
       ${renderGenreSelect(book['ジャンル'])}
       ${renderChipInputField('タグ', 'editTags', book['タグ'], true, 'tags')}
 
@@ -1827,6 +1827,12 @@ function getChipSuggestions(type, keyword, currentItems) {
     );
   }
 
+    if (type === 'publishers') {
+    source = state.books
+      .map(book => book['出版社'])
+      .filter(Boolean);
+  }
+  
   if (type === 'purchasePlaces') {
     source = state.books
       .map(book => book['購入場所'])

@@ -738,9 +738,7 @@
   white-space: pre-wrap;
     margin-top: -25px;
 }
-  line-height: 1.65;
-  white-space: pre-wrap;
-}
+
 
 .secondary-button {
   border: 1px solid var(--line);

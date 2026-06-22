@@ -90,24 +90,23 @@ function showHomeView() {
   const todayQuote = getTodayQuoteOrImpression();
 
   const onThisDayDisplayItems = onThisDayItems;
-
-   const readingBooks = allReadingBooks;
+  const readingBooks = allReadingBooks;
   const tsundokuBooks = shuffleArray(allTsundokuBooks);
   const wantBooks = shuffleArray(allWantBooks);
   const pausedBooks = shuffleArray(allPausedBooks);
 
   document.getElementById('app').innerHTML = `
-  <div class="home-app-title">dokusyo</div>
+    <div class="home-app-title">dokusyo</div>
 
-  <div class="subtle home-stats-line">
-    今月 ${stats.month}冊　/　今年 ${stats.year}冊　/　累計 ${stats.total}冊　/　${stats.streak}週連続読了中
-  </div>
+    <div class="subtle home-stats-line">
+      今月 ${stats.month}冊　/　今年 ${stats.year}冊　/　累計 ${stats.total}冊　/　${stats.streak}週連続読了中
+    </div>
 
     ${todayQuote ? `
-  <section class="home-card-grid single">
-    ${renderTodayQuoteCard(todayQuote)}
-  </section>
-` : ''}
+      <section class="home-card-grid single">
+        ${renderTodayQuoteCard(todayQuote)}
+      </section>
+    ` : ''}
 
     <section class="home-card-grid">
       ${renderHomeBookGroupCard({
@@ -118,7 +117,7 @@ function showHomeView() {
         onCardClick: 'showOnThisDayList()'
       })}
 
-      ${{
+      ${renderHomeBookGroupCard({
         title: '📖 机の上',
         count: allReadingBooks.length,
         books: readingBooks,
@@ -128,7 +127,7 @@ function showHomeView() {
     </section>
 
     <section class="home-card-grid single">
-      ${{
+      ${renderHomeBookGroupCard({
         title: '📦 積読',
         count: allTsundokuBooks.length,
         books: tsundokuBooks,
@@ -138,7 +137,7 @@ function showHomeView() {
     </section>
 
     <section class="home-card-grid">
-      ${{
+      ${renderHomeBookGroupCard({
         title: '💭 気になる本',
         count: allWantBooks.length,
         books: wantBooks,
@@ -146,7 +145,7 @@ function showHomeView() {
         onCardClick: "showStatusBookList('want', '💭 気になる本')"
       })}
 
-      ${{
+      ${renderHomeBookGroupCard({
         title: '⏸ 中断',
         count: allPausedBooks.length,
         books: pausedBooks,

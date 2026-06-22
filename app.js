@@ -1513,57 +1513,38 @@ async function saveBookData(bookId) {
     impression: document.getElementById('editImpression')?.value || ''
   };
 
-  const beforeBookFetch = performance.now();
+  const beforeSaveFetch = performance.now();
 
-  const bookResponse = await fetch(GAS_WEB_APP_URL, {
+  const response = await fetch(GAS_WEB_APP_URL, {
     method: 'POST',
     body: JSON.stringify({
-      type: 'updateBook',
+      type: 'saveBookAndLatestReading',
       bookId,
-      bookData: bookPayload
-    })
-  });
-
-  const afterBookFetch = performance.now();
-
-  const bookData = await bookResponse.json();
-
-  const afterBookJson = performance.now();
-
-  const beforeReadingFetch = performance.now();
-
-  const readingResponse = await fetch(GAS_WEB_APP_URL, {
-    method: 'POST',
-    body: JSON.stringify({
-      type: 'updateLatestReading',
-      bookId,
+      bookData: bookPayload,
       readingData: readingPayload
     })
   });
 
-  const afterReadingFetch = performance.now();
+  const afterSaveFetch = performance.now();
 
-  const readingData = await readingResponse.json();
+  const data = await response.json();
 
-  const afterReadingJson = performance.now();
+  const afterSaveJson = performance.now();
 
-  console.log('[保存速度 計測]', {
-    updateBook通信Ms: Math.round(afterBookFetch - beforeBookFetch),
-    updateBookJsonMs: Math.round(afterBookJson - afterBookFetch),
-    updateBookGasTiming: bookData?.result?.timing || null,
-
-    updateLatestReading通信Ms: Math.round(afterReadingFetch - beforeReadingFetch),
-    updateLatestReadingJsonMs: Math.round(afterReadingJson - afterReadingFetch),
-
-    合計Ms: Math.round(afterReadingJson - totalStart),
+  console.log('[保存速度 計測 after統合]', {
+    統合通信Ms: Math.round(afterSaveFetch - beforeSaveFetch),
+    jsonMs: Math.round(afterSaveJson - afterSaveFetch),
+    gasTiming: data?.result?.timing || null,
+    updateBookGasTiming: data?.result?.book?.timing || null,
+    合計Ms: Math.round(afterSaveJson - totalStart),
     bookId: bookId
   });
 
   return {
     bookPayload,
     readingPayload,
-    readingId: readingData.result.readingId,
-    skipped: readingData.result.skipped
+    readingId: data.result.readingId,
+    skipped: data.result.skipped
   };
 }
 

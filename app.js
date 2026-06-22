@@ -118,7 +118,7 @@ function showHomeView() {
         onCardClick: 'showOnThisDayList()'
       })}
 
-      ${renderHomeBookGroupCard({
+      ${{
         title: '📖 机の上',
         count: allReadingBooks.length,
         books: readingBooks,
@@ -128,7 +128,7 @@ function showHomeView() {
     </section>
 
     <section class="home-card-grid single">
-      ${renderHomeBookGroupCard({
+      ${{
         title: '📦 積読',
         count: allTsundokuBooks.length,
         books: tsundokuBooks,
@@ -138,7 +138,7 @@ function showHomeView() {
     </section>
 
     <section class="home-card-grid">
-      ${renderHomeBookGroupCard({
+      ${{
         title: '💭 気になる本',
         count: allWantBooks.length,
         books: wantBooks,
@@ -146,7 +146,7 @@ function showHomeView() {
         onCardClick: "showStatusBookList('want', '💭 気になる本')"
       })}
 
-      ${renderHomeBookGroupCard({
+      ${{
         title: '⏸ 中断',
         count: allPausedBooks.length,
         books: pausedBooks,
@@ -196,6 +196,9 @@ function renderHomeBookGroupCard({
   emptyLabel,
   onCardClick
 }) {
+  const displayItems = items || books;
+  const isSingleBook = displayItems.length === 1;
+
   const displayHtml = items
     ? items.map(item => renderHomeMiniBook(item.book, item.year)).join('')
     : books.map(book => renderHomeMiniBook(book)).join('');
@@ -207,7 +210,7 @@ function renderHomeBookGroupCard({
         <div class="home-book-group-count">(${count})</div>
       </div>
 
-      <div class="home-book-group-books">
+      <div class="home-book-group-books ${isSingleBook ? 'single-book' : ''}">
         ${
           displayHtml
             ? displayHtml

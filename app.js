@@ -1493,6 +1493,8 @@ async function saveAndCloseEdit(bookId, readingId = '') {
 }
 
 async function saveBookData(bookId) {
+  const totalStart = performance.now();
+
   const bookPayload = {
     title: document.getElementById('editTitle')?.value || '',
     author: document.getElementById('editAuthor')?.value || '',
@@ -1511,6 +1513,8 @@ async function saveBookData(bookId) {
     impression: document.getElementById('editImpression')?.value || ''
   };
 
+  const beforeBookFetch = performance.now();
+
   const bookResponse = await fetch(GAS_WEB_APP_URL, {
     method: 'POST',
     body: JSON.stringify({
@@ -1520,7 +1524,13 @@ async function saveBookData(bookId) {
     })
   });
 
-  await bookResponse.json();
+  const afterBookFetch = performance.now();
+
+  const bookData = await bookResponse.json();
+
+  const afterBookJson = performance.now();
+
+  const beforeReadingFetch = performance.now();
 
   const readingResponse = await fetch(GAS_WEB_APP_URL, {
     method: 'POST',
@@ -1531,7 +1541,23 @@ async function saveBookData(bookId) {
     })
   });
 
+  const afterReadingFetch = performance.now();
+
   const readingData = await readingResponse.json();
+
+  const afterReadingJson = performance.now();
+
+  console.log('[保存速度 計測]', {
+    updateBook通信Ms: Math.round(afterBookFetch - beforeBookFetch),
+    updateBookJsonMs: Math.round(afterBookJson - afterBookFetch),
+    updateBookGasTiming: bookData?.result?.timing || null,
+
+    updateLatestReading通信Ms: Math.round(afterReadingFetch - beforeReadingFetch),
+    updateLatestReadingJsonMs: Math.round(afterReadingJson - afterReadingFetch),
+
+    合計Ms: Math.round(afterReadingJson - totalStart),
+    bookId: bookId
+  });
 
   return {
     bookPayload,

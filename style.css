@@ -310,13 +310,12 @@
     line-height: 1.75;
     font-size: 15px;
   }
-
-  .tag-line {
-    border-top: 1px solid var(--line);
-    padding-top: 18px;
-    color: var(--muted);
-    font-size: 13px;
-  }
+.tag-line {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 6px;
+  margin-bottom: 18px;
+}
 
   .empty-message {
     color: var(--muted);

@@ -589,7 +589,7 @@ function showBookDetail(bookId) {
       ${escapeHtml(formatBookMetaLine(book))}
     </div>
     <div class="genre-line">${escapeHtml(formatGenres(book['ジャンル']))}</div>
-
+      <div class="tag-line">${escapeHtml(formatTags(book['タグ']))}</div>
     ${renderPurchaseBlock(book)}
 
     ${readings.map((reading, index) => renderReadingBlock(reading, index)).join('')}
@@ -603,7 +603,6 @@ function showBookDetail(bookId) {
       }
     </section>
 
-    <div class="tag-line">${escapeHtml(formatTags(book['タグ']))}</div>
   `;
 }
 

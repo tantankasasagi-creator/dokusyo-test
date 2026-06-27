@@ -169,8 +169,8 @@ function renderTodayQuoteCard(todayQuote) {
             <div class="home-book-group-title">📖 今日の一節</div>
           </div>
 
-          <div class="quote-home-text">
-            「${escapeHtml(todayQuote.text)}」
+         <div class="quote-home-text">
+            ${escapeHtml(todayQuote.text)}
           </div>
         </div>
 
@@ -1242,14 +1242,16 @@ function renderPurchaseBlock(book) {
 function renderReadingBlock(reading, index) {
   const label = index === 0 ? '初読' : '再読';
   const dateLine = `${formatDate(reading['読始日']) || '----'} ～ ${formatDate(reading['読了日']) || '----'}`;
-  const place = reading['読了場所'] ? `${escapeHtml(reading['読了場所'])}で読了` : '';
+  const finishPlace = String(reading['読了場所'] || '').trim();
+  const metaLine = finishPlace
+    ? `${dateLine}　${escapeHtml(finishPlace)}で読了`
+    : dateLine;
 
   return `
     <section class="archive-block">
       <div class="archive-heading">📖 ${label}</div>
-      <div class="archive-meta">${escapeHtml(dateLine)}</div>
+      <div class="archive-meta">${metaLine}</div>
       <div class="archive-meta">${renderStars(reading['評価'])}</div>
-      ${place ? `<div class="archive-meta">${place}</div>` : ''}
       ${reading['感想'] ? `<div class="archive-text">${escapeHtml(reading['感想'])}</div>` : '<div class="subtle">感想はまだありません。</div>'}
     </section>
   `;

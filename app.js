@@ -416,7 +416,7 @@ function handleBookSearchInput() {
 
   bookSearchTimer = setTimeout(() => {
     searchTitleFromInputManually();
-  },500);
+  }, 500);
 }
 
 function findLocalBooksForRegisterSearch(keyword) {
@@ -445,7 +445,7 @@ async function searchTitleFromInputManually() {
   const container = document.getElementById('suggestionList');
 
   if (!keyword) {
-    alert('タイトルまたはISBNを入力してください');
+    container.innerHTML = '';
     return;
   }
 

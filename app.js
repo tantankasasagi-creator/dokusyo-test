@@ -26,9 +26,6 @@ const quoteDraft = {
 };
 
 let bookSearchTimer = null;
-let lastGoogleBooksKeyword = '';
-let lastGoogleBooksSearchedAt = 0;
-let bookSearchRequestId = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
   loadInitialData();
@@ -405,6 +402,7 @@ function showRegisterView() {
           placeholder="タイトル・著者・ISBN"
           oninput="handleBookSearchInput()"
         >
+       <button class="camera-button" onclick="searchTitleFromInputManually()">🔎</button>
         <button class="camera-button" onclick="showIsbnCameraView()">📷</button>
       </div>
 
@@ -426,60 +424,22 @@ async function searchBookFromInputAuto() {
   const keyword = input?.value.trim() || '';
   const container = document.getElementById('suggestionList');
 
-  const requestId = ++bookSearchRequestId;
-
   if (!keyword) {
     container.innerHTML = '';
-    return;
-  }
-
-  const isbn = keyword.replace(/[^0-9Xx]/g, '');
-
-  if (isbn.length === 10 || isbn.length === 13) {
-    await searchIsbnFromInput();
     return;
   }
 
   const localMatches = findLocalBooksForRegisterSearch(keyword);
 
   if (localMatches.length) {
-    if (requestId !== bookSearchRequestId) return;
     renderLocalBookSearchResults(localMatches);
     return;
   }
 
-  if (requestId !== bookSearchRequestId) return;
-
-  const now = Date.now();
-
-  if (keyword === lastGoogleBooksKeyword && now - lastGoogleBooksSearchedAt < 60000) {
-    return;
-  }
-
-  lastGoogleBooksKeyword = keyword;
-  lastGoogleBooksSearchedAt = now;
-
-  container.innerHTML = '<div class="subtle">Google Booksを検索しています...</div>';
-
-  try {
-    const googleBooks = await searchGoogleBooksDirect(keyword);
-
-    if (requestId !== bookSearchRequestId) return;
-
-    console.log('[Google Books直接検索結果]', {
-      keyword,
-      count: googleBooks.length,
-      titles: googleBooks.map(book => book.title)
-    });
-
-    renderGoogleBooksSearchResults(googleBooks, keyword);
-
-  } catch (error) {
-    if (requestId !== bookSearchRequestId) return;
-
-    container.innerHTML =
-      `<div class="subtle">タイトル検索に失敗しました: ${escapeHtml(error.message)}</div>`;
-  }
+  container.innerHTML = `
+    <div class="subtle">保存済みの本は見つかりませんでした。🔎でGoogle Booksを検索できます。</div>
+    <button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>
+  `;
 }
 
 function findLocalBooksForRegisterSearch(keyword) {
@@ -514,6 +474,50 @@ function renderLocalBookSearchResults(books) {
       </div>
     `).join('')}
   `;
+}
+
+async function searchTitleFromInputManually() {
+  const input = document.getElementById('bookSearchInput');
+  const keyword = input?.value.trim() || '';
+  const container = document.getElementById('suggestionList');
+
+  if (!keyword) {
+    alert('タイトルまたはISBNを入力してください');
+    return;
+  }
+
+  const isbn = keyword.replace(/[^0-9Xx]/g, '');
+
+  if (isbn.length === 10 || isbn.length === 13) {
+    await searchIsbnFromInput();
+    return;
+  }
+
+  container.innerHTML = '<div class="subtle">Google Booksを検索しています...</div>';
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'searchBooksByTitle',
+        keyword
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.result && data.result.success === false) {
+      container.innerHTML =
+        `<div class="subtle">${escapeHtml(data.result.message || 'Google Books検索に失敗しました')}</div>`;
+      return;
+    }
+
+    renderGoogleBooksSearchResults(data.result.books || [], keyword);
+
+  } catch (error) {
+    container.innerHTML =
+      `<div class="subtle">タイトル検索に失敗しました: ${escapeHtml(error.message)}</div>`;
+  }
 }
 
 async function searchIsbnFromInput() {
@@ -584,56 +588,6 @@ function renderIsbnResult(result) {
       </div>
     </div>
   `;
-}
-
-async function searchGoogleBooksDirect(keyword) {
-  const url =
-    `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(keyword)}&maxResults=10`;
-
-  const response = await fetch(url);
-
-  if (response.status === 429) {
-    throw new Error('Google Books APIの利用制限中です。少し時間をおいて再検索してください。');
-  }
-
-  if (!response.ok) {
-    throw new Error(`Google Books検索に失敗しました: ${response.status}`);
-  }
-
-  const data = await response.json();
-  const items = Array.isArray(data.items) ? data.items : [];
-
-  return items.map(item => {
-    const info = item.volumeInfo || {};
-    const imageLinks = info.imageLinks || {};
-    const identifiers = Array.isArray(info.industryIdentifiers)
-      ? info.industryIdentifiers
-      : [];
-
-    const isbn13Item = identifiers.find(id => id.type === 'ISBN_13');
-    const isbn10Item = identifiers.find(id => id.type === 'ISBN_10');
-
-    const isbn =
-      isbn13Item?.identifier ||
-      isbn10Item?.identifier ||
-      '';
-
-    const coverUrl =
-      imageLinks.thumbnail ||
-      imageLinks.smallThumbnail ||
-      '';
-
-    return {
-      source: 'googleBooks',
-      title: info.title || '',
-      author: Array.isArray(info.authors)
-        ? info.authors.join('|')
-        : '',
-      publisher: info.publisher || '',
-      isbn,
-      coverUrl: coverUrl ? coverUrl.replace(/^http:/, 'https:') : ''
-    };
-  }).filter(book => book.title);
 }
 
 function renderGoogleBooksSearchResults(books, keyword = '') {

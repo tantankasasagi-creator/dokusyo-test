@@ -848,14 +848,15 @@ function isImageUrl(url) {
 
   const lower = url.toLowerCase();
 
-  return (
+    return (
     lower.includes('.jpg') ||
     lower.includes('.jpeg') ||
     lower.includes('.png') ||
     lower.includes('.webp') ||
     lower.includes('ndlsearch.ndl.go.jp/thumbnail') ||
     lower.includes('m.media-amazon.com/images') ||
-    lower.includes('msp.c.yimg.jp/images')
+    lower.includes('msp.c.yimg.jp/images') ||
+    lower.includes('books.google.com/books/content')
   );
 }
 

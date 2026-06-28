@@ -26,6 +26,8 @@ const quoteDraft = {
 };
 
 let bookSearchTimer = null;
+let lastGoogleBooksKeyword = '';
+let lastGoogleBooksSearchedAt = 0;
 let bookSearchRequestId = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -447,7 +449,14 @@ async function searchBookFromInputAuto() {
   }
 
   if (requestId !== bookSearchRequestId) return;
+  const now = Date.now();
 
+  if (keyword === lastGoogleBooksKeyword && now - lastGoogleBooksSearchedAt < 60000) {
+    return;
+  }
+
+  lastGoogleBooksKeyword = keyword;
+  lastGoogleBooksSearchedAt = now;
   container.innerHTML = '<div class="subtle">Google Booksを検索しています...</div>';
 
   try {

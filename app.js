@@ -614,7 +614,7 @@ books = books.filter(book => {
   return !registeredIsbns.has(String(book.isbn).trim());
 });
   
-  if (!books.length) {
+ if (!books.length && !localBooks.length) {
     container.innerHTML = `
       <div class="subtle" style="margin-bottom:8px;">Google Books</div>
       <div class="suggestion-item">
@@ -646,8 +646,11 @@ books = books.filter(book => {
       : ''
   }
 
-  <div class="subtle" style="margin-bottom:8px;">Google Books</div>
-    ${books.map(book => `
+  ${
+    books.length
+      ? `
+        <div class="subtle" style="margin-bottom:8px;">Google Books</div>
+        ${books.map(book => `
       <div class="isbn-result-card" onclick='registerBookFromGoogleBooks(${JSON.stringify(book)})'>
         <div class="isbn-result-cover">
           ${
@@ -663,8 +666,11 @@ books = books.filter(book => {
           ${book.isbn ? `<div class="subtle">ISBN: ${escapeHtml(book.isbn)}</div>` : ''}
         </div>
       </div>
-    `).join('')}
-    ${keyword ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
+        `).join('')}
+      `
+      : ''
+  }
+  ${keyword ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
   `;
 }
 

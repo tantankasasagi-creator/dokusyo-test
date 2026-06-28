@@ -25,6 +25,9 @@ const quoteDraft = {
   text: ''
 };
 
+let bookSearchTimer = null;
+let bookSearchRequestId = 0;
+
 document.addEventListener('DOMContentLoaded', () => {
   loadInitialData();
 });
@@ -393,8 +396,13 @@ function showRegisterView() {
 
     <div class="register-box">
       <div class="input-row">
-        <input id="bookSearchInput" class="text-input" type="text" placeholder="タイトルまたはISBN" oninput="renderSuggestions()">
-        <button class="camera-button" onclick="searchBookFromInput()">🔎</button>
+        <input
+          id="bookSearchInput"
+          class="text-input"
+          type="text"
+          placeholder="タイトル・著者・ISBN"
+          oninput="handleBookSearchInput()"
+        >
         <button class="camera-button" onclick="showIsbnCameraView()">📷</button>
       </div>
 
@@ -403,54 +411,103 @@ function showRegisterView() {
   `;
 }
 
-function renderSuggestions() {
-  const keyword = document.getElementById('bookSearchInput').value.trim();
+function handleBookSearchInput() {
+  clearTimeout(bookSearchTimer);
+
+  bookSearchTimer = setTimeout(() => {
+    searchBookFromInputAuto();
+  }, 500);
+}
+
+async function searchBookFromInputAuto() {
+  const input = document.getElementById('bookSearchInput');
+  const keyword = input?.value.trim() || '';
   const container = document.getElementById('suggestionList');
+
+  const requestId = ++bookSearchRequestId;
 
   if (!keyword) {
     container.innerHTML = '';
     return;
   }
 
-  const matches = state.books.filter(book =>
-    String(book['タイトル'] || '').includes(keyword) ||
-    String(book['著者'] || '').includes(keyword)
-  ).slice(0, 10);
-
-  const hasExactTitle = state.books.some(book =>
-    String(book['タイトル'] || '').trim() === keyword
-  );
-
-  const matchHtml = matches.map(book => `
-    <div class="suggestion-item" onclick="showBookDetail('${book['書籍ID']}')">
-      <div class="suggestion-title">${escapeHtml(book['タイトル'])}</div>
-      <div class="subtle">${escapeHtml(book['著者'] || '')}</div>
-    </div>
-  `).join('');
-
-  container.innerHTML = `
-    ${matchHtml}
-    ${!hasExactTitle ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
-  `;
-}
-
-async function searchBookFromInput() {
-  const input = document.getElementById('bookSearchInput');
-  const keyword = input?.value.trim() || '';
   const isbn = keyword.replace(/[^0-9Xx]/g, '');
-
-  if (!keyword) {
-    alert('タイトルまたはISBNを入力してください');
-    return;
-  }
 
   if (isbn.length === 10 || isbn.length === 13) {
     await searchIsbnFromInput();
     return;
   }
 
-  await searchTitleFromInput(keyword);
+  const localMatches = findLocalBooksForRegisterSearch(keyword);
+
+  if (localMatches.length) {
+    if (requestId !== bookSearchRequestId) return;
+    renderLocalBookSearchResults(localMatches);
+    return;
+  }
+
+  if (requestId !== bookSearchRequestId) return;
+
+  container.innerHTML = '<div class="subtle">Google Booksを検索しています...</div>';
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'searchBooksByTitle',
+        keyword
+      })
+    });
+
+    const data = await response.json();
+
+    if (requestId !== bookSearchRequestId) return;
+
+    renderGoogleBooksSearchResults(data.result.books || [], keyword);
+
+  } catch (error) {
+    if (requestId !== bookSearchRequestId) return;
+
+    container.innerHTML =
+      `<div class="subtle">タイトル検索に失敗しました: ${escapeHtml(error.message)}</div>`;
+  }
 }
+
+function findLocalBooksForRegisterSearch(keyword) {
+  const normalizedKeyword = normalizeSearchText(keyword);
+
+  return state.books
+    .filter(book => {
+      const searchTarget = [
+        book['タイトル'],
+        book['著者'],
+        book['出版社'],
+        book['ISBN'],
+        book['タグ'],
+        book['ジャンル']
+      ].map(normalizeSearchText).join(' ');
+
+      return searchTarget.includes(normalizedKeyword);
+    })
+    .sort((a, b) => getTouchDate(b) - getTouchDate(a))
+    .slice(0, 10);
+}
+
+function renderLocalBookSearchResults(books) {
+  const container = document.getElementById('suggestionList');
+
+  container.innerHTML = `
+    <div class="subtle" style="margin-bottom:8px;">保存済み</div>
+    ${books.map(book => `
+      <div class="suggestion-item" onclick="showBookDetail('${escapeHtml(book['書籍ID'])}')">
+        <div class="suggestion-title">${escapeHtml(book['タイトル'] || '')}</div>
+        <div class="subtle">${escapeHtml(formatBookMetaLine(book))}</div>
+      </div>
+    `).join('')}
+  `;
+}
+
+
 
 async function searchTitleFromInput(keyword) {
   const container = document.getElementById('suggestionList');
@@ -545,20 +602,22 @@ function renderIsbnResult(result) {
   `;
 }
 
-function renderGoogleBooksSearchResults(books) {
+function renderGoogleBooksSearchResults(books, keyword = '') {
   const container = document.getElementById('suggestionList');
 
   if (!books.length) {
     container.innerHTML = `
+      <div class="subtle" style="margin-bottom:8px;">Google Books</div>
       <div class="suggestion-item">
-        <div class="suggestion-title">Google Booksで候補が見つかりませんでした</div>
+        <div class="suggestion-title">候補が見つかりませんでした</div>
       </div>
+      ${keyword ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
     `;
     return;
   }
 
   container.innerHTML = `
-    <div class="subtle" style="margin-bottom:8px;">Google Booksの候補</div>
+    <div class="subtle" style="margin-bottom:8px;">Google Books</div>
     ${books.map(book => `
       <div class="isbn-result-card" onclick='registerBookFromGoogleBooks(${JSON.stringify(book)})'>
         <div class="isbn-result-cover">
@@ -573,12 +632,10 @@ function renderGoogleBooksSearchResults(books) {
           <div class="subtle">${escapeHtml(book.author || '')}</div>
           <div class="subtle">${escapeHtml(book.publisher || '')}</div>
           ${book.isbn ? `<div class="subtle">ISBN: ${escapeHtml(book.isbn)}</div>` : ''}
-          <button class="register-book-button" type="button">
-            この本を登録
-          </button>
         </div>
       </div>
     `).join('')}
+    ${keyword ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
   `;
 }
 

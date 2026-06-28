@@ -512,7 +512,13 @@ async function searchTitleFromInputManually() {
       return;
     }
 
-    renderGoogleBooksSearchResults(data.result.books || [], keyword);
+  const localBooks = findLocalBooksForRegisterSearch(keyword);
+
+renderGoogleBooksSearchResults(
+  data.result.books || [],
+  keyword,
+  localBooks
+);
 
   } catch (error) {
     container.innerHTML =
@@ -590,9 +596,24 @@ function renderIsbnResult(result) {
   `;
 }
 
-function renderGoogleBooksSearchResults(books, keyword = '') {
+function renderGoogleBooksSearchResults(
+  books,
+  keyword = '',
+  localBooks = []
+) {
   const container = document.getElementById('suggestionList');
 
+  const registeredIsbns = new Set(
+  state.books
+    .map(book => String(book['ISBN'] || '').trim())
+    .filter(Boolean)
+);
+
+books = books.filter(book => {
+  if (!book.isbn) return true;
+  return !registeredIsbns.has(String(book.isbn).trim());
+});
+  
   if (!books.length) {
     container.innerHTML = `
       <div class="subtle" style="margin-bottom:8px;">Google Books</div>
@@ -605,7 +626,27 @@ function renderGoogleBooksSearchResults(books, keyword = '') {
   }
 
   container.innerHTML = `
-    <div class="subtle" style="margin-bottom:8px;">Google Books</div>
+  ${
+    localBooks.length
+      ? `
+        <div class="subtle" style="margin-bottom:8px;">保存済み</div>
+        ${localBooks.map(book => `
+          <div class="suggestion-item"
+               onclick="showBookDetail('${escapeHtml(book['書籍ID'])}')">
+            <div class="suggestion-title">
+              ${escapeHtml(book['タイトル'] || '')}
+            </div>
+            <div class="subtle">
+              ${escapeHtml(formatBookMetaLine(book))}
+            </div>
+          </div>
+        `).join('')}
+        <hr style="margin:12px 0;">
+      `
+      : ''
+  }
+
+  <div class="subtle" style="margin-bottom:8px;">Google Books</div>
     ${books.map(book => `
       <div class="isbn-result-card" onclick='registerBookFromGoogleBooks(${JSON.stringify(book)})'>
         <div class="isbn-result-cover">

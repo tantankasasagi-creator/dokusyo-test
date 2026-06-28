@@ -416,7 +416,7 @@ function handleBookSearchInput() {
 
   bookSearchTimer = setTimeout(() => {
     searchBookFromInputAuto();
-  }, 500);
+  },1200);
 }
 
 async function searchBookFromInputAuto() {
@@ -464,12 +464,14 @@ async function searchBookFromInputAuto() {
     if (requestId !== bookSearchRequestId) return;
     
     console.log('[Google Books検索結果]', data.result);
-    if (data.result && data.result.success === false) {
+
+if (data.result && data.result.success === false) {
   container.innerHTML =
     `<div class="subtle">${escapeHtml(data.result.message || 'Google Books検索に失敗しました')}</div>`;
   return;
 }
-    renderGoogleBooksSearchResults(data.result.books || [], keyword);
+
+renderGoogleBooksSearchResults(data.result.books || [], keyword);
 
   } catch (error) {
     if (requestId !== bookSearchRequestId) return;

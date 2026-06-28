@@ -402,7 +402,7 @@ function showRegisterView() {
           placeholder="タイトル・著者・ISBN"
           oninput="handleBookSearchInput()"
         >
-       <button class="camera-button" onclick="searchTitleFromInputManually()">🔎</button>
+     
         <button class="camera-button" onclick="showIsbnCameraView()">📷</button>
       </div>
 
@@ -415,31 +415,8 @@ function handleBookSearchInput() {
   clearTimeout(bookSearchTimer);
 
   bookSearchTimer = setTimeout(() => {
-    searchBookFromInputAuto();
-  },1200);
-}
-
-async function searchBookFromInputAuto() {
-  const input = document.getElementById('bookSearchInput');
-  const keyword = input?.value.trim() || '';
-  const container = document.getElementById('suggestionList');
-
-  if (!keyword) {
-    container.innerHTML = '';
-    return;
-  }
-
-  const localMatches = findLocalBooksForRegisterSearch(keyword);
-
-  if (localMatches.length) {
-    renderLocalBookSearchResults(localMatches);
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="subtle">保存済みの本は見つかりませんでした。🔎でGoogle Booksを検索できます。</div>
-    <button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>
-  `;
+    searchTitleFromInputManually();
+  },500);
 }
 
 function findLocalBooksForRegisterSearch(keyword) {

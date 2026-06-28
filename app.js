@@ -641,7 +641,7 @@ books = books.filter(book => {
             </div>
           </div>
         `).join('')}
-        <hr style="margin:12px 0;">
+       ${books.length ? '<hr style="margin:12px 0;">' : ''}
       `
       : ''
   }

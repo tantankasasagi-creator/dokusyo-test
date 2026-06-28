@@ -462,7 +462,8 @@ async function searchBookFromInputAuto() {
     const data = await response.json();
 
     if (requestId !== bookSearchRequestId) return;
-
+    
+    console.log('[Google Books検索結果]', data.result);
     renderGoogleBooksSearchResults(data.result.books || [], keyword);
 
   } catch (error) {

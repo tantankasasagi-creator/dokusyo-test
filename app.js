@@ -848,7 +848,7 @@ function isImageUrl(url) {
 
   const lower = url.toLowerCase();
 
-    return (
+      return (
     lower.includes('.jpg') ||
     lower.includes('.jpeg') ||
     lower.includes('.png') ||

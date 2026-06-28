@@ -394,7 +394,7 @@ function showRegisterView() {
     <div class="register-box">
       <div class="input-row">
         <input id="bookSearchInput" class="text-input" type="text" placeholder="タイトルまたはISBN" oninput="renderSuggestions()">
-        <button class="camera-button" onclick="searchIsbnFromInput()">🔎</button>
+        <button class="camera-button" onclick="searchBookFromInput()">🔎</button>
         <button class="camera-button" onclick="showIsbnCameraView()">📷</button>
       </div>
 
@@ -432,6 +432,47 @@ function renderSuggestions() {
     ${matchHtml}
     ${!hasExactTitle ? `<button class="create-button" onclick="createNewBookFromSearch()">＋「${escapeHtml(keyword)}」を新しい本として作成</button>` : ''}
   `;
+}
+
+async function searchBookFromInput() {
+  const input = document.getElementById('bookSearchInput');
+  const keyword = input?.value.trim() || '';
+  const isbn = keyword.replace(/[^0-9Xx]/g, '');
+
+  if (!keyword) {
+    alert('タイトルまたはISBNを入力してください');
+    return;
+  }
+
+  if (isbn.length === 10 || isbn.length === 13) {
+    await searchIsbnFromInput();
+    return;
+  }
+
+  await searchTitleFromInput(keyword);
+}
+
+async function searchTitleFromInput(keyword) {
+  const container = document.getElementById('suggestionList');
+  container.innerHTML = '<div class="subtle">Google Booksを検索しています...</div>';
+
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'searchBooksByTitle',
+        keyword
+      })
+    });
+
+    const data = await response.json();
+
+    renderGoogleBooksSearchResults(data.result.books || []);
+
+  } catch (error) {
+    container.innerHTML =
+      `<div class="subtle">タイトル検索に失敗しました: ${escapeHtml(error.message)}</div>`;
+  }
 }
 
 async function searchIsbnFromInput() {
@@ -504,7 +545,71 @@ function renderIsbnResult(result) {
   `;
 }
 
+function renderGoogleBooksSearchResults(books) {
+  const container = document.getElementById('suggestionList');
+
+  if (!books.length) {
+    container.innerHTML = `
+      <div class="suggestion-item">
+        <div class="suggestion-title">Google Booksで候補が見つかりませんでした</div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="subtle" style="margin-bottom:8px;">Google Booksの候補</div>
+    ${books.map(book => `
+      <div class="isbn-result-card" onclick='registerBookFromGoogleBooks(${JSON.stringify(book)})'>
+        <div class="isbn-result-cover">
+          ${
+            book.coverUrl
+              ? `<img class="book-cover" src="${escapeHtml(book.coverUrl).replace(/^http:/, 'https:')}">`
+              : `<div class="dummy-cover">${escapeHtml(book.title || 'No Title')}</div>`
+          }
+        </div>
+        <div class="isbn-result-info">
+          <div class="suggestion-title">${escapeHtml(book.title || '')}</div>
+          <div class="subtle">${escapeHtml(book.author || '')}</div>
+          <div class="subtle">${escapeHtml(book.publisher || '')}</div>
+          ${book.isbn ? `<div class="subtle">ISBN: ${escapeHtml(book.isbn)}</div>` : ''}
+          <button class="register-book-button" type="button">
+            この本を登録
+          </button>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
 async function registerBookFromIsbn(bookData) {
+  try {
+    const response = await fetch(GAS_WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        type: 'createBookFromIsbn',
+        bookData
+      })
+    });
+
+    const data = await response.json();
+    const result = data.result;
+
+    if (result.duplicated) {
+      await loadInitialData();
+      showBookDetail(result.bookId);
+      return;
+    }
+
+    await loadInitialData();
+    showEditView(result.bookId);
+
+  } catch (error) {
+    alert(`登録失敗: ${error.message}`);
+  }
+}
+
+async function registerBookFromGoogleBooks(bookData) {
   try {
     const response = await fetch(GAS_WEB_APP_URL, {
       method: 'POST',

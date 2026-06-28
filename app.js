@@ -439,20 +439,6 @@ function findLocalBooksForRegisterSearch(keyword) {
     .slice(0, 10);
 }
 
-function renderLocalBookSearchResults(books) {
-  const container = document.getElementById('suggestionList');
-
-  container.innerHTML = `
-    <div class="subtle" style="margin-bottom:8px;">保存済み</div>
-    ${books.map(book => `
-      <div class="suggestion-item" onclick="showBookDetail('${escapeHtml(book['書籍ID'])}')">
-        <div class="suggestion-title">${escapeHtml(book['タイトル'] || '')}</div>
-        <div class="subtle">${escapeHtml(formatBookMetaLine(book))}</div>
-      </div>
-    `).join('')}
-  `;
-}
-
 async function searchTitleFromInputManually() {
   const input = document.getElementById('bookSearchInput');
   const keyword = input?.value.trim() || '';
@@ -608,16 +594,23 @@ books = books.filter(book => {
       ? `
         <div class="subtle" style="margin-bottom:8px;">保存済み</div>
         ${localBooks.map(book => `
-          <div class="suggestion-item"
-               onclick="showBookDetail('${escapeHtml(book['書籍ID'])}')">
-            <div class="suggestion-title">
-              ${escapeHtml(book['タイトル'] || '')}
-            </div>
-            <div class="subtle">
-              ${escapeHtml(formatBookMetaLine(book))}
-            </div>
-          </div>
-        `).join('')}
+  <div class="isbn-result-card"
+       onclick="showBookDetail('${escapeHtml(book['書籍ID'])}')">
+    <div class="isbn-result-cover">
+      ${renderCover(book)}
+    </div>
+
+    <div class="isbn-result-info">
+      <div class="suggestion-title">
+        ${escapeHtml(book['タイトル'] || '')}
+      </div>
+      <div class="subtle">
+        ${escapeHtml(formatBookMetaLine(book))}
+      </div>
+      ${book['ISBN'] ? `<div class="subtle">ISBN: ${escapeHtml(book['ISBN'])}</div>` : ''}
+    </div>
+  </div>
+`).join('')}
        ${books.length ? '<hr style="margin:12px 0;">' : ''}
       `
       : ''

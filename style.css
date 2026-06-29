@@ -1061,3 +1061,21 @@
   font-size: 12px;
   line-height: 1.35;
 }
+
+.edit-cover-preview {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 24px;
+}
+
+.edit-cover-preview .cover-wrap {
+  width: 120px;
+  max-width: 34vw;
+}
+
+.edit-cover-preview .book-cover,
+.edit-cover-preview .dummy-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+}

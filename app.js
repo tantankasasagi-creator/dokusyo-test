@@ -1535,6 +1535,12 @@ function showEditView(bookId, readingId = '') {
 
     <h1 class="page-title">本と付き合う</h1>
 
+    <div class="edit-cover-preview">
+  <div class="cover-wrap">
+    ${renderCover(book)}
+  </div>
+</div>
+
     <div class="edit-form">
       ${renderEditField('タイトル', 'editTitle', book['タイトル'])}
       ${renderChipInputField('著者', 'editAuthor', book['著者'], false, 'authors')}
